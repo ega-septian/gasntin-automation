@@ -9,7 +9,6 @@ back to the test case, and from there to the PRD requirement it covers.
 ## Setup
 
 ```bash
-cd automation
 npm install
 npx playwright install
 cp .env.example .env
@@ -17,14 +16,20 @@ cp .env.example .env
 
 ## Running
 
-The backend must be running first — it needs PostgreSQL and a configured
-`backend/.env`:
+The app under test (backend + frontend) lives in a separate repo, `gastinweb`, cloned
+as a sibling directory. The backend needs PostgreSQL and its own configured `.env`:
 
 ```bash
-cd backend && go run ./cmd/api    # listens on :8081
+cd ../gastinweb/backend && go run ./cmd/api   # listens on :8081
 ```
 
-Then:
+The WEB suite also needs the frontend running:
+
+```bash
+cd ../gastinweb/frontend && npm run dev       # listens on :5173
+```
+
+Then, from this repo:
 
 ```bash
 npm run test:api      # API suite only
@@ -44,22 +49,6 @@ the suite runs fully parallel and needs no database credentials or fixture data.
 password is a bcrypt hash rather than plain text. The API never returns `password_hash`,
 so there is no other way to verify it. Without the variable that single test reports as
 skipped — never silently dropped.
-
-## Coverage
-
-| Qase case | Covered |
-|---|---|
-| GASNTIN-1 | Registration: 201 + token shape, auto-login, bcrypt hash (needs `DATABASE_URL`) |
-| GASNTIN-2 | Login success + token usable against `/api/auth/me` |
-| GASNTIN-3 | Wrong password → generic 401 |
-| GASNTIN-4 | Unregistered email → response byte-identical to wrong password |
-| GASNTIN-5/6/7 | Empty email, empty password, malformed email → 400 |
-| GASNTIN-8 | JWT alg/claims/24h expiry, plus tampered-token rejection |
-
-### Not covered by automation
-
-- `GASNTIN-5`'s "no user lookup is attempted against the database" — not observable
-  from outside the process. The externally verifiable half (400 + no token) is covered.
 
 ## Relationship to Qase
 
