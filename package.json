@@ -1,0 +1,23 @@
+{
+  "name": "gastinweb-automation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright automation for SHOP.CO, generated from Qase test cases (project GASNTIN)",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^26.3.0",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^16.4.7",
+    "pg": "^8.13.1",
+    "playwright-qase-reporter": "^2.7.0",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,91 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DATABASE_URL: postgres://teststore:teststore@localhost:5432/teststore?sslmode=disable
+  API_BASE_URL: http://localhost:8081
+  WEB_BASE_URL: http://localhost:5173
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout automation repo
+        uses: actions/checkout@v4
+
+      # SHOP.CO's app code (backend + frontend) lives in a separate repo.
+      # Update `repository:` if it's renamed, and add a PAT secret here
+      # (`token: ${{ secrets.APP_REPO_TOKEN }}`) if that repo is private —
+      # the default GITHUB_TOKEN can only read the repo the workflow runs in.
+      - name: Checkout app repo (backend + frontend)
+        uses: actions/checkout@v4
+        with:
+          repository: ega-septian/web-testing
+          path: app-repo
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: app-repo/backend/go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            app-repo/frontend/package-lock.json
+
+      # Reuses the app repo's own docker-compose.yml so migrations under
+      # backend/migrations/ apply exactly the way they do locally (mounted
+      # into /docker-entrypoint-initdb.d on first init) — nothing CI-specific
+      # to keep in sync with local dev.
+      - name: Start Postgres
+        run: |
+          docker compose -f app-repo/backend/docker-compose.yml up -d
+          until docker inspect --format='{{.State.Health.Status}}' teststore-postgres | grep -q healthy; do
+            sleep 1
+          done
+
+      - name: Start backend
+        working-directory: app-repo/backend
+        run: |
+          go run ./cmd/api &
+          until curl -sf "$API_BASE_URL/health" > /dev/null; do sleep 1; done
+
+      # A production build + `vite preview` is used instead of `vite dev` —
+      # deterministic startup and closer to what actually ships.
+      # VITE_API_BASE_URL is a build-time value (Vite inlines it into the
+      # bundle), so it has to be set before `build`, not just before `preview`.
+      - name: Build and start frontend
+        working-directory: app-repo/frontend
+        run: |
+          npm ci
+          VITE_API_BASE_URL="$API_BASE_URL" npm run build
+          npm run preview -- --port 5173 --host &
+          until curl -sf "$WEB_BASE_URL" > /dev/null; do sleep 1; done
+
+      - name: Install automation dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          QASE_API_TOKEN: ${{ secrets.QASE_API_TOKEN }}
+          QASE_PROJECT_CODE: GASNTIN
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
