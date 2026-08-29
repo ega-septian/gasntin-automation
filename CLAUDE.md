@@ -57,9 +57,19 @@ Additional rules:
 - Save new PRD files at `docs/PRD-<feature-name>.md`.
 - If there's an original PRD on Confluence being used as the reference, mention its page ID/title in the closing note or Appendix, not in the main body.
 
+## Three-Agent QA Architecture: Product Manager → QA Tester → Automation Engineer
+
+Test-case work on this project is split across three separate subagents (`.claude/agents/product-manager.md`, `.claude/agents/qa-tester.md`, `.claude/agents/automation-engineer.md`), invoked via `/pm-spec`, `/generate-testcase`, and `/automate-testcase` respectively. The split exists to prevent a specific failure mode discovered in this project: writing a test case's "expected result" by reading the backend code that produces it, which makes the test circular — it can only prove the code agrees with itself, never catch a real bug in it.
+
+- **`product-manager`** decides what a feature *should* do — from stated requirements, visible frontend UI text, existing docs, and named UX conventions. It **never reads backend implementation code** to decide correctness. Its output is a saved spec (`docs/spec-<feature-slug>.md`) used when no Confluence PRD exists for a feature.
+- **`qa-tester`** writes/maintains the actual Qase test cases, sourcing "expected behavior" only from a Confluence PRD or a `product-manager` spec — never invented from reading the code. It still reads backend/frontend code, but only to *verify* the implementation against that source and report mismatches, not to *decide* what's correct.
+- **`automation-engineer`** converts an already-decided Qase case into a Playwright test. Reading implementation code here is expected and necessary (to get the exact endpoint/status/shape or button/label text right) — correctness was already settled upstream.
+
+Any of the three finding an unresolved question, ambiguity, or a spec/implementation mismatch stops and reports it — none of them silently guesses, silently "fixes" the other layer, or silently treats current behavior as correct without a traceable source.
+
 ## QA Persona & Test Case Generation Rules
 
-Whenever asked to create/generate test cases for this project (SHOP.CO), act as a **Senior QA Engineer**: thorough, skeptical of assumptions, and always verify requirement claims against the actual code (not just trusting the PRD text).
+Whenever asked to create/generate test cases for this project (SHOP.CO), act as a **Senior QA Engineer**: thorough, skeptical of assumptions, and always verify requirement claims against the actual code (not just trusting the PRD text). (When working via the three-agent split above, this persona is the `qa-tester` agent specifically — see its own file for the added rule about where "expected behavior" is allowed to come from.)
 
 Follow this process every time, without skipping steps:
 
@@ -90,7 +100,16 @@ WEB   (top-level, id 3)
 ```
 
 - New suites for a feature are created as children of `API` or `WEB` (using `parent_id`), never as a new top-level suite.
-- Tag every test case with the related requirement ID (e.g. `FR-1`, `NFR-2`) for clear traceability to the PRD, plus a layer tag (`API`/`WEB`) and a type tag (`Positive`/`Negative`).
+- Tag every test case with the related requirement ID (e.g. `FR-1`, `NFR-2`) for clear traceability to the PRD, plus a layer tag (`API`/`WEB`) and a type tag (`Positive`/`Negative`). If there's no PRD/Confluence page to trace to (e.g. the feature was built directly from conversation, no formal requirement doc exists), tag with a descriptive feature-name tag instead (e.g. `Homepage`) and say so when reporting back — don't invent a fake `FR-x` ID.
+
+### Every Test Case Must Set Priority and Severity — Never Leave the Default
+
+When creating a case via `POST /case/{code}`, always include `priority` and `severity` explicitly in the payload — never leave them unset. An unset field silently defaults to `0` (priority) / `4` (severity), which reads as "nobody decided" rather than an intentional call, and is easy to miss since the API doesn't warn about it.
+
+- **Priority** — how important it is that this gets covered/run: `1` = High (core/primary flow; breaking it blocks the main feature), `2` = Medium (secondary flow, validation/edge case, supporting data), `3` = Low (cosmetic, a redundant alternate path, a convenience feature).
+- **Severity** — how bad it is if the tested behavior turns out broken: `1` = Blocker (breaks the whole app/site, not just one feature — rare), `2` = Critical (the core feature is entirely unusable), `3` = Major (degraded or wrong but the feature still basically works), `4` = Minor (cosmetic, non-blocking), `5` = Trivial (decorative/marketing content, no functional impact).
+- Match the scale already established in the existing suites (e.g. the Login cases, case IDs 2-16) rather than inventing a new one — skim a few existing cases first if unsure how a similar case was rated.
+- Decide **per case**, based on that case's actual content — don't copy the same pair onto every case in a batch. If a whole batch ends up sharing the exact same priority/severity, that's a signal it was defaulted/copy-pasted rather than actually judged; re-check before submitting.
 
 ### Automation Rule: One Qase Test Case = One Playwright Test
 
