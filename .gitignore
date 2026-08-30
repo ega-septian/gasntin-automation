@@ -22,3 +22,7 @@ playwright-report/
 test-results/
 blob-report/
 .playwright/
+
+# PM/QA working docs (PRDs, TRDs, specs) — drafted locally for reference,
+# not meant to be pushed/shared via the repo.
+docs/
