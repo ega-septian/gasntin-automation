@@ -32,3 +32,13 @@ export function listProducts(
   const qs = query.toString()
   return request.get(`${API_BASE_URL}/api/products${qs ? `?${qs}` : ''}`)
 }
+
+/**
+ * Raw action — no assertions inside; the spec asserts on the response itself
+ * since this endpoint is the subject under test. Public endpoint, no auth.
+ * Returns the Shop page's/homepage's filter facets (brand, gender, category,
+ * subcategory, size), each with a live count.
+ */
+export function getProductFilters(request: APIRequestContext): Promise<APIResponse> {
+  return request.get(`${API_BASE_URL}/api/products/filters`)
+}
