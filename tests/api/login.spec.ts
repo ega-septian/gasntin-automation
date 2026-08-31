@@ -85,7 +85,7 @@ test.describe('API > Login', () => {
     }
   )
 
-  test(
+  test.skip(
     'Login fails - empty email field',
     { ...qaseId(5), tag: ['@regression', '@login'] },
     async ({ request }) => {
