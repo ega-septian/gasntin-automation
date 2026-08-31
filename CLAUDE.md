@@ -70,6 +70,10 @@ Project rules live one-per-file under `.claude/rules/` and are imported below â€
 
 @.claude/rules/commit-granularity.md
 
+## Every PR Uses the Standard Template â€” Never a Freeform Description
+
+@.claude/rules/pr-template-policy.md
+
 ## Playwright's Backoff-Polling Assertions Can Miss Narrow Transient States
 
 @.claude/rules/narrow-window-assertions.md
