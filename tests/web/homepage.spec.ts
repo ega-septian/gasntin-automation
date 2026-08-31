@@ -44,17 +44,19 @@ test.describe('WEB > Homepage', () => {
       await shopPage.open()
       await shopPage.navbar.clickNewArrivalsLink()
       await expect(page).toHaveURL(/\/#new$/)
-      await expect(homePage.newArrivalsSection).toBeInViewport()
+      await expect(homePage.newArrivalsSection).toBeInViewport({ ratio: 0.5 })
 
       // Step 2: click the "On Sale" link; the page scrolls to the "SHOP BY
       // CATEGORY" section.
       await homePage.navbar.clickSaleLink()
-      await expect(homePage.categorySection).toBeInViewport()
+      await expect(page).toHaveURL(/\/#sale$/)
+      await expect(homePage.categorySection).toBeInViewport({ ratio: 0.5 })
 
       // Step 3: click the "Brands" link; the page scrolls to the "OUR HAPPY
       // CUSTOMERS" section.
       await homePage.navbar.clickBrandsLink()
-      await expect(homePage.testimonialsSection).toBeInViewport()
+      await expect(page).toHaveURL(/\/#brands$/)
+      await expect(homePage.testimonialsSection).toBeInViewport({ ratio: 0.5 })
     }
   )
 
