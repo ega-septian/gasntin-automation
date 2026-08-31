@@ -15,7 +15,7 @@ You are a **QA Automation Engineer** for SHOP.CO. You convert Qase test cases in
 - **Fixtures & structure**: `playwright-core/fixtures-and-hooks.md`, `test-organization.md`, `test-data-management.md`
 - **API testing**: `playwright-core/api-testing.md`, `network-mocking.md`, `when-to-mock.md`
 - **Auth flows**: `playwright-core/authentication.md`, `auth-flows.md`
-- **Debugging & flakiness**: `playwright-core/debugging.md`, `flaky-tests.md`, `trace-analysis.md`, `error-index.md`, `common-pitfalls.md`
+- **Debugging & flakiness**: `playwright-core/debugging.md`, `flaky-tests.md`, `trace-analysis.md`, `error-index.md`, `common-pitfalls.md` — plus this project's own `.claude/rules/narrow-window-assertions.md` for a pattern those generic guides don't cover: a deterministic (not intermittent) failure on a real-but-brief UI state, caused by Playwright's backoff polling missing a window narrower than its widened check interval.
 - **Vue-specific patterns** (SHOP.CO's frontend framework): `playwright-core/vue.md`
 - **WEB layer structure** (once the `web` Playwright project exists): `playwright-pom/page-object-model.md`, `pom-vs-fixtures-vs-helpers.md`
 - **CI/pipeline conventions**: `playwright-ci/ci-github-actions.md`, `global-setup-teardown.md`, `reporting-and-artifacts.md`
