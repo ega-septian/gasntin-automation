@@ -48,21 +48,12 @@ test.describe('WEB > Login', () => {
     async ({ page, request, loginPage }) => {
       const seeded = await registerUser(request)
 
-      // Delays the login response instead of throttling the network, so the
-      // loading state has a reliable window to be observed.
       let loginRequestCount = 0
       await page.route('**/api/auth/login', async (route) => {
         loginRequestCount++
         await new Promise((resolve) => setTimeout(resolve, 800))
         await route.continue()
       })
-      // On success the app navigates to the Homepage right after the button
-      // re-enables, which normally swaps it out of the DOM in the same tick
-      // before Step 3 can observe the "re-enabled, back to Masuk" state. The
-      // Homepage view is only fetched on demand (it hasn't been loaded yet,
-      // since the test starts on the Login page directly), so delaying that
-      // fetch keeps the Login page rendered long enough for the reverted
-      // button state to actually be observable, without altering app behavior.
       await page.route('**/views/HomeView.vue*', async (route) => {
         await new Promise((resolve) => setTimeout(resolve, 1500))
         await route.continue()
@@ -158,9 +149,6 @@ test.describe('WEB > Login', () => {
     async ({ page, request }) => {
       const seeded = await registerUser(request)
 
-      // Seeds the logged-in precondition directly via localStorage (same keys the
-      // app itself persists on login) rather than re-driving the form — this case
-      // is about the guard's redirect behavior, not the login flow itself.
       await page.goto('/login')
       await page.evaluate(
         ({ token, user }) => {

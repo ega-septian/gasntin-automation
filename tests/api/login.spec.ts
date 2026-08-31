@@ -82,8 +82,7 @@ test.describe('API > Login', () => {
     const res = await login(request, buildLoginPayload({ email: '' }))
     expect(res.status()).toBe(400)
 
-    // Step 2: no token/session is created. (Only observable via the API response —
-    // "no DB lookup attempted" isn't verifiable from a black-box test.)
+    // Step 2: no token is returned in the response.
     expect(await res.json()).not.toHaveProperty('token')
   })
 
@@ -124,8 +123,6 @@ test.describe('API > Login', () => {
       // Step 4: check the token's lifetime is 24 hours.
       expect(payload.exp - payload.iat).toBe(24 * 60 * 60)
 
-      // Sanity check (not a Qase step): the untouched token is accepted, so the 401s
-      // below in step 5 really are caused by tampering and not a broken request.
       const validRes = await me(request, token)
       expect(validRes.status()).toBe(200)
 

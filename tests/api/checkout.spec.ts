@@ -5,18 +5,12 @@ import { checkout, buildCheckoutPayload } from '../../api/orders.js'
 import { qaseId } from '../../support/qase.js'
 
 test.describe('API > Checkout', () => {
-  // Serial, not parallel: cases 52/53 both pick a live product+size by
-  // current stock, and case 53 always drains whatever it picks down to 0.
-  // Running them concurrently risks both landing on the same product+size
-  // and racing each other's stock read/decrement.
   test.describe.configure({ mode: 'serial' })
 
   test(
     "POST /orders rejects checkout when a requested item's quantity exceeds its current available stock",
     qaseId(52),
     async ({ request }) => {
-      // Setup: a logged-in user, plus a product+size with a known current
-      // stock N (read live from the catalog rather than assumed).
       const seeded = await registerUser(request)
       const item = await findProductWithStock(request, 1)
 
@@ -50,8 +44,6 @@ test.describe('API > Checkout', () => {
     "POST /orders succeeds when a requested item's quantity exactly equals its current available stock",
     qaseId(53),
     async ({ request }) => {
-      // Setup: a logged-in user, plus a product+size with a known current
-      // stock N (N >= 1), read live from the catalog rather than assumed.
       const seeded = await registerUser(request)
       const item = await findProductWithStock(request, 1)
 
@@ -98,11 +90,7 @@ test.describe('API > Checkout', () => {
       })
     )
 
-    // HTTP 401 is returned with an error indicating the token is missing or
-    // invalid. "No order is created" is not independently verifiable here:
-    // an unauthenticated request never resolves to any user_id, so there is
-    // no order history that could be queried to prove it either way in a
-    // black-box test.
+    // Step 2: the request is rejected with 401 and a non-empty error message.
     expect(res.status()).toBe(401)
     const body = await res.json()
     expect(typeof body.error).toBe('string')

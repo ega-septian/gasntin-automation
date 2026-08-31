@@ -38,8 +38,6 @@ test.describe('API > Homepage', () => {
 
     const body = await res.json()
     expect(Array.isArray(body)).toBe(true)
-    // Relies on the environment already having at least one uploaded asset
-    // (e.g. hero_banner) rather than seeding one itself.
     expect(body.length).toBeGreaterThan(0)
 
     // Step 2: every item carries the expected fields, with timestamps
@@ -61,12 +59,6 @@ test.describe('API > Homepage', () => {
     'GET /api/products with no query params returns the newest products up to the default limit',
     qaseId(18),
     async ({ request }) => {
-      // Seeds one fresh product so the response is guaranteed non-empty
-      // regardless of whatever else is already in the catalog. Its exact
-      // position isn't asserted — other tests in this suite seed products
-      // concurrently (fullyParallel), so only this suite's own creation
-      // order relative to the rest of the catalog is guaranteed, not a
-      // specific index.
       const { token } = await registerUser(request)
       await seedProduct(request, token, buildProductPayload())
 
@@ -91,11 +83,6 @@ test.describe('API > Homepage', () => {
     'GET /api/products?sort=best_selling orders products by total units sold, descending',
     qaseId(19),
     async ({ request }) => {
-      // Seeds two products with a known, distinct sale history: one clearly
-      // outselling the other. Recorded through the same POST
-      // /api/products/:id/sales endpoint the real "record a sale" flow uses,
-      // so this proves the sort against genuine sale events rather than
-      // assuming the environment already has sale history to rank by.
       const { token } = await registerUser(request)
       const bestSeller = await seedProduct(request, token, buildProductPayload())
       const worstSeller = await seedProduct(request, token, buildProductPayload())
@@ -140,8 +127,6 @@ test.describe('API > Homepage', () => {
       expect(body.param).toBe('sort')
       expect(typeof body.error).toBe('string')
       expect(body.error.length).toBeGreaterThan(0)
-      // Content check only — wording may evolve, but it must name the
-      // parameter and list both accepted values.
       expect(body.error).toMatch(/sort/i)
       expect(body.error).toMatch(/newest/i)
       expect(body.error).toMatch(/best_selling/i)
@@ -159,8 +144,6 @@ test.describe('API > Homepage', () => {
       expect(nonNumericBody.param).toBe('limit')
       expect(typeof nonNumericBody.error).toBe('string')
       expect(nonNumericBody.error.length).toBeGreaterThan(0)
-      // Content check only — wording may evolve, but it must name the
-      // parameter and communicate that a positive integer is required.
       expect(nonNumericBody.error).toMatch(/limit/i)
       expect(nonNumericBody.error).toMatch(/bilangan bulat positif|positive integer/i)
 
@@ -181,9 +164,6 @@ test.describe('API > Homepage', () => {
     'GET /api/products/filters returns brand, gender, category, subcategory, and size facets with live counts',
     qaseId(22),
     async ({ request }) => {
-      // Seeds one product carrying a value in every facet dimension
-      // (brand, gender, category, subcategory, size), so each facet is
-      // guaranteed at least one entry regardless of the rest of the catalog.
       const { token } = await registerUser(request)
       const seeded = await seedProduct(
         request,
@@ -203,8 +183,6 @@ test.describe('API > Homepage', () => {
         subcategory: expect.any(Array),
         size: expect.any(Array),
       })
-      // The seeded product's own facet values must each appear, proving the
-      // facets are computed live rather than from a hardcoded/stale list.
       expect(body.brand.some((f: { value: string }) => f.value === seeded.brand)).toBe(true)
       expect(body.gender.some((f: { value: string }) => f.value === seeded.gender)).toBe(true)
       expect(body.category.some((f: { value: string }) => f.value === seeded.category)).toBe(true)
@@ -229,8 +207,6 @@ test.describe('API > Homepage', () => {
     'GET /api/products?brand= filters results to only that brand',
     qaseId(23),
     async ({ request }) => {
-      // Seeds a product with brand SUKO so the filter has a known match
-      // regardless of whether the catalog already has one.
       const { token } = await registerUser(request)
       const seeded = await seedProduct(request, token, buildProductPayload({ brand: 'SUKO' }))
 
@@ -253,10 +229,6 @@ test.describe('API > Homepage', () => {
     'GET /api/products?category= filters results, and combines with other filters as AND',
     qaseId(24),
     async ({ request }) => {
-      // Seeds two Outerwear products for different genders, so the
-      // category-only vs. combined-with-gender comparison is proven against
-      // known data instead of assuming the catalog already has Outerwear
-      // products spread across more than one gender.
       const { token } = await registerUser(request)
       const wanitaOuterwear = await seedProduct(
         request,
