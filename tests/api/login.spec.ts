@@ -7,54 +7,62 @@ import { qaseId } from '@support/qase.js'
 const GENERIC_AUTH_ERROR = 'email atau password salah'
 
 test.describe('API > Login', () => {
-  test('Successful login with valid email & password', qaseId(2), async ({ request }) => {
-    const seeded = await registerUser(request)
+  test(
+    'Successful login with valid email & password',
+    { ...qaseId(2), tag: '@smoke' },
+    async ({ request }) => {
+      const seeded = await registerUser(request)
 
-    // Step 1: log in with the seeded user's valid credentials.
-    const res = await login(
-      request,
-      buildLoginPayload({ email: seeded.email, password: seeded.password })
-    )
-    expect(res.status()).toBe(200)
+      // Step 1: log in with the seeded user's valid credentials.
+      const res = await login(
+        request,
+        buildLoginPayload({ email: seeded.email, password: seeded.password })
+      )
+      expect(res.status()).toBe(200)
 
-    // Step 2: response includes a token and user object, never the password.
-    const body = await res.json()
-    expect(body.token).toEqual(expect.any(String))
-    expect(body.token.length).toBeGreaterThan(0)
-    expect(body.user).toMatchObject({ id: seeded.user.id, email: seeded.email })
-    expect(body.user).not.toHaveProperty('password')
-    expect(body.user).not.toHaveProperty('password_hash')
-    expect(await res.text()).not.toContain(seeded.password)
+      // Step 2: response includes a token and user object, never the password.
+      const body = await res.json()
+      expect(body.token).toEqual(expect.any(String))
+      expect(body.token.length).toBeGreaterThan(0)
+      expect(body.user).toMatchObject({ id: seeded.user.id, email: seeded.email })
+      expect(body.user).not.toHaveProperty('password')
+      expect(body.user).not.toHaveProperty('password_hash')
+      expect(await res.text()).not.toContain(seeded.password)
 
-    // Step 3: the token is usable to call the protected /me endpoint.
-    const meRes = await me(request, body.token)
-    expect(meRes.status()).toBe(200)
-    expect(await meRes.json()).toMatchObject({ id: seeded.user.id, email: seeded.email })
-  })
+      // Step 3: the token is usable to call the protected /me endpoint.
+      const meRes = await me(request, body.token)
+      expect(meRes.status()).toBe(200)
+      expect(await meRes.json()).toMatchObject({ id: seeded.user.id, email: seeded.email })
+    }
+  )
 
-  test('Login fails - wrong password (registered email)', qaseId(3), async ({ request }) => {
-    const seeded = await registerUser(request)
+  test(
+    'Login fails - wrong password (registered email)',
+    { ...qaseId(3), tag: '@regression' },
+    async ({ request }) => {
+      const seeded = await registerUser(request)
 
-    // Step 1: log in with a registered email but the wrong password.
-    const res = await login(
-      request,
-      buildLoginPayload({ email: seeded.email, password: 'WrongPassword123' })
-    )
-    expect(res.status()).toBe(401)
+      // Step 1: log in with a registered email but the wrong password.
+      const res = await login(
+        request,
+        buildLoginPayload({ email: seeded.email, password: 'WrongPassword123' })
+      )
+      expect(res.status()).toBe(401)
 
-    // Step 2: response is the generic auth-error message, no token.
-    const body = await res.json()
-    expect(body).toEqual({ error: GENERIC_AUTH_ERROR })
-    expect(body).not.toHaveProperty('token')
+      // Step 2: response is the generic auth-error message, no token.
+      const body = await res.json()
+      expect(body).toEqual({ error: GENERIC_AUTH_ERROR })
+      expect(body).not.toHaveProperty('token')
 
-    // Step 3: no session was created — a protected endpoint still rejects the caller.
-    const meRes = await me(request)
-    expect(meRes.status()).toBe(401)
-  })
+      // Step 3: no session was created — a protected endpoint still rejects the caller.
+      const meRes = await me(request)
+      expect(meRes.status()).toBe(401)
+    }
+  )
 
   test(
     'Login fails - unregistered email, message identical to wrong-password case (anti user-enumeration)',
-    qaseId(4),
+    { ...qaseId(4), tag: '@regression' },
     async ({ request }) => {
       const seeded = await registerUser(request)
 
@@ -77,32 +85,44 @@ test.describe('API > Login', () => {
     }
   )
 
-  test('Login fails - empty email field', qaseId(5), async ({ request }) => {
-    // Step 1: log in with an empty email.
-    const res = await login(request, buildLoginPayload({ email: '' }))
-    expect(res.status()).toBe(400)
+  test(
+    'Login fails - empty email field',
+    { ...qaseId(5), tag: '@regression' },
+    async ({ request }) => {
+      // Step 1: log in with an empty email.
+      const res = await login(request, buildLoginPayload({ email: '' }))
+      expect(res.status()).toBe(400)
 
-    // Step 2: no token is returned in the response.
-    expect(await res.json()).not.toHaveProperty('token')
-  })
+      // Step 2: no token is returned in the response.
+      expect(await res.json()).not.toHaveProperty('token')
+    }
+  )
 
-  test('Login fails - empty password field', qaseId(6), async ({ request }) => {
-    // Step 1: log in with an empty password.
-    const res = await login(request, buildLoginPayload({ password: '' }))
-    expect(res.status()).toBe(400)
-    expect(await res.json()).not.toHaveProperty('token')
-  })
+  test(
+    'Login fails - empty password field',
+    { ...qaseId(6), tag: '@regression' },
+    async ({ request }) => {
+      // Step 1: log in with an empty password.
+      const res = await login(request, buildLoginPayload({ password: '' }))
+      expect(res.status()).toBe(400)
+      expect(await res.json()).not.toHaveProperty('token')
+    }
+  )
 
-  test('Login fails - invalid email format', qaseId(7), async ({ request }) => {
-    // Step 1: log in with a malformed email address.
-    const res = await login(request, buildLoginPayload({ email: 'not-a-valid-email' }))
-    expect(res.status()).toBe(400)
-    expect(await res.json()).not.toHaveProperty('token')
-  })
+  test(
+    'Login fails - invalid email format',
+    { ...qaseId(7), tag: '@regression' },
+    async ({ request }) => {
+      // Step 1: log in with a malformed email address.
+      const res = await login(request, buildLoginPayload({ email: 'not-a-valid-email' }))
+      expect(res.status()).toBe(400)
+      expect(await res.json()).not.toHaveProperty('token')
+    }
+  )
 
   test(
     'Verify the JWT token issued at login (HS256 algorithm, 24-hour expiry)',
-    qaseId(8),
+    { ...qaseId(8), tag: '@regression' },
     async ({ request }) => {
       const seeded = await registerUser(request)
 

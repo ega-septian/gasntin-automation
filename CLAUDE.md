@@ -22,6 +22,10 @@ Project rules live one-per-file under `.claude/rules/` and are imported below â€
 
 @.claude/rules/qase-suite-structure.md
 
+### Every Test Case Gets Exactly One of `smoke` / `regression`
+
+@.claude/rules/smoke-and-regression-tagging.md
+
 ### Priority and Severity
 
 @.claude/rules/priority-and-severity.md
