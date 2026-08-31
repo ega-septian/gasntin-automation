@@ -1,32 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { listAssets } from '../../api/assets.js'
-import {
-  listProducts,
-  getProductFilters,
-  seedProduct,
-  seedSale,
-  type CreateProductPayload,
-} from '../../api/products.js'
+import { listProducts, getProductFilters, seedProduct, seedSale } from '../../api/products.js'
 import { registerUser } from '../../api/auth.js'
 import { qaseId } from '../../support/qase.js'
-
-/**
- * Default fields for a seeded catalog product — only the field(s) a given
- * test actually cares about need to be overridden at the call site, same
- * pattern as data/users.ts's buildRegisterPayload.
- */
-function buildProductPayload(overrides: Partial<CreateProductPayload> = {}): CreateProductPayload {
-  return {
-    brand: 'NEVADA',
-    name: `Seed Product ${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    gender: 'Pria',
-    category: 'Atasan',
-    subcategory: 'Kaos',
-    price: 100000,
-    sizes: [{ size: 'M', stock: 10 }],
-    ...overrides,
-  }
-}
+import { buildProductPayload } from '../../data/products.js'
 
 const TIMESTAMP_FORMAT = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
 

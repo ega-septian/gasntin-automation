@@ -42,6 +42,10 @@ Project rules live one-per-file under `.claude/rules/` and are imported below â€
 
 @.claude/rules/no-direct-request-calls.md
 
+### Reusable Payload/Data Factories Belong in `data/<domain>.ts`
+
+@.claude/rules/data-factories-in-data-folder.md
+
 ### Step Writing Language (WEB/UI test cases only)
 
 @.claude/rules/web-step-writing-language.md
