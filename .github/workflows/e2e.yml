@@ -12,7 +12,27 @@ env:
   WEB_BASE_URL: http://localhost:5173
 
 jobs:
+  # Fast fail before any of e2e's slow environment setup (Postgres, backend,
+  # frontend build) — a type or formatting error is reported in seconds
+  # instead of after several minutes of setup that was never going to matter.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run format:check
+
   e2e:
+    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -83,7 +103,17 @@ jobs:
       - name: Seed CI-only test data
         run: node scripts/seed-ci-assets.mjs
 
-      - name: Run Playwright tests
+      # PRs get fast feedback from the smoke subset only, and never sync to
+      # Qase — a PR's code isn't final yet, and every push to it would
+      # otherwise create a new noisy Qase run. Push to main is the real
+      # signal: full suite, synced to Qase. workflow_dispatch (manual runs)
+      # gets the same full-suite treatment as main.
+      - name: Run Playwright tests (smoke only)
+        if: github.event_name == 'pull_request'
+        run: npx playwright test --grep @smoke
+
+      - name: Run Playwright tests (full suite)
+        if: github.event_name != 'pull_request'
         run: npx playwright test
         env:
           QASE_API_TOKEN: ${{ secrets.QASE_API_TOKEN }}
