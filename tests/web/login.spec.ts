@@ -54,10 +54,6 @@ test.describe('WEB > Login', () => {
         await new Promise((resolve) => setTimeout(resolve, 800))
         await route.continue()
       })
-      await page.route('**/views/HomeView.vue*', async (route) => {
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        await route.continue()
-      })
 
       // Step 1: submit valid credentials; the button immediately shows the loading state.
       await loginPage.emailInput.fill(seeded.email)
@@ -73,8 +69,15 @@ test.describe('WEB > Login', () => {
 
       // Step 3: once the process finishes, the button re-enables, the loading
       // animation disappears, and the text reverts to "Masuk".
-      await expect(loginPage.submitButton).toBeEnabled()
-      await expect(loginPage.submitButton).toHaveText('Masuk')
+      await page.waitForFunction(
+        () => {
+          const button = document.querySelector(
+            '[data-testid="login-submit-button"]'
+          ) as HTMLButtonElement | null
+          return button !== null && !button.disabled && button.textContent?.trim() === 'Masuk'
+        },
+        { polling: 50, timeout: 5000 }
+      )
       expect(loginRequestCount).toBe(1)
     }
   )
