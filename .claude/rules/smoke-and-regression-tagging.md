@@ -19,6 +19,16 @@ test('Successful login with valid email & password', { ...qaseId(2), tag: '@smok
 })
 ```
 
+When the case also carries a feature tag (see `.claude/rules/qase-suite-structure.md`), `tag` becomes an array combining both:
+
+```ts
+test(
+  "POST /orders succeeds when a requested item's quantity exactly equals its current available stock",
+  { ...qaseId(53), tag: ['@smoke', '@checkout'] },
+  async ({ request }) => { ... }
+)
+```
+
 - The tag is always `@smoke` or `@regression` (Playwright's own convention prefixes tags with `@`) — matching the Qase tag it corresponds to (`smoke`/`regression`, no `@` there, since Qase tags are plain strings).
 - This lets CI (or a local run) filter by test level independently of Qase: `npx playwright test --grep @smoke`.
 - A case with no automation yet only needs the Qase-side tag; there's no `test()` to attach `tag` to until `automation-engineer` builds one — at which point the tag is added then, matching whatever the case is already tagged in Qase.

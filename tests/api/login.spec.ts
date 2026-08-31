@@ -9,7 +9,7 @@ const GENERIC_AUTH_ERROR = 'email atau password salah'
 test.describe('API > Login', () => {
   test(
     'Successful login with valid email & password',
-    { ...qaseId(2), tag: '@smoke' },
+    { ...qaseId(2), tag: ['@smoke', '@login'] },
     async ({ request }) => {
       const seeded = await registerUser(request)
 
@@ -38,7 +38,7 @@ test.describe('API > Login', () => {
 
   test(
     'Login fails - wrong password (registered email)',
-    { ...qaseId(3), tag: '@regression' },
+    { ...qaseId(3), tag: ['@regression', '@login'] },
     async ({ request }) => {
       const seeded = await registerUser(request)
 
@@ -62,7 +62,7 @@ test.describe('API > Login', () => {
 
   test(
     'Login fails - unregistered email, message identical to wrong-password case (anti user-enumeration)',
-    { ...qaseId(4), tag: '@regression' },
+    { ...qaseId(4), tag: ['@regression', '@login'] },
     async ({ request }) => {
       const seeded = await registerUser(request)
 
@@ -87,7 +87,7 @@ test.describe('API > Login', () => {
 
   test(
     'Login fails - empty email field',
-    { ...qaseId(5), tag: '@regression' },
+    { ...qaseId(5), tag: ['@regression', '@login'] },
     async ({ request }) => {
       // Step 1: log in with an empty email.
       const res = await login(request, buildLoginPayload({ email: '' }))
@@ -100,7 +100,7 @@ test.describe('API > Login', () => {
 
   test(
     'Login fails - empty password field',
-    { ...qaseId(6), tag: '@regression' },
+    { ...qaseId(6), tag: ['@regression', '@login'] },
     async ({ request }) => {
       // Step 1: log in with an empty password.
       const res = await login(request, buildLoginPayload({ password: '' }))
@@ -111,7 +111,7 @@ test.describe('API > Login', () => {
 
   test(
     'Login fails - invalid email format',
-    { ...qaseId(7), tag: '@regression' },
+    { ...qaseId(7), tag: ['@regression', '@login'] },
     async ({ request }) => {
       // Step 1: log in with a malformed email address.
       const res = await login(request, buildLoginPayload({ email: 'not-a-valid-email' }))
@@ -122,7 +122,7 @@ test.describe('API > Login', () => {
 
   test(
     'Verify the JWT token issued at login (HS256 algorithm, 24-hour expiry)',
-    { ...qaseId(8), tag: '@regression' },
+    { ...qaseId(8), tag: ['@regression', '@login'] },
     async ({ request }) => {
       const seeded = await registerUser(request)
 

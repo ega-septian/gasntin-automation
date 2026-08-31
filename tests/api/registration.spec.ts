@@ -7,7 +7,7 @@ import { qaseId } from '@support/qase.js'
 test.describe('API > Registration', () => {
   test(
     'Successful registration with valid email & password (auto-login)',
-    { ...qaseId(1), tag: '@smoke' },
+    { ...qaseId(1), tag: ['@smoke', '@registration'] },
     async ({ request }) => {
       const payload = buildRegisterPayload({ email: uniqueEmail('newuser') })
 

@@ -6,7 +6,7 @@ import { uniqueEmail } from '@data/users.js'
 test.describe('WEB > Login', () => {
   test(
     'Successful login via the Login form, redirected to the Homepage',
-    { ...qaseId(9), tag: '@smoke' },
+    { ...qaseId(9), tag: ['@smoke', '@login'] },
     async ({ page, request, loginPage }) => {
       const seeded = await registerUser(request)
 
@@ -27,7 +27,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'Login fails via the Login form - error message displayed correctly',
-    { ...qaseId(10), tag: '@regression' },
+    { ...qaseId(10), tag: ['@regression', '@login'] },
     async ({ page, request, loginPage }) => {
       const seeded = await registerUser(request)
 
@@ -44,7 +44,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'The "Masuk" button is disabled and shows a loading state during login',
-    { ...qaseId(11), tag: '@regression' },
+    { ...qaseId(11), tag: ['@regression', '@login'] },
     async ({ page, request, loginPage }) => {
       test.setTimeout(60_000)
       const seeded = await registerUser(request)
@@ -85,7 +85,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'The show/hide password icon on the Login form works correctly',
-    { ...qaseId(12), tag: '@regression' },
+    { ...qaseId(12), tag: ['@regression', '@login'] },
     async ({ loginPage }) => {
       // Step 1: typed characters are masked by default.
       await loginPage.passwordInput.fill('some-password')
@@ -105,7 +105,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'The Login form prevents submission when the Email or Password field is empty',
-    { ...qaseId(13), tag: '@regression' },
+    { ...qaseId(13), tag: ['@regression', '@login'] },
     async ({ page, loginPage }) => {
       // Step 1: leave Email empty, fill Password, submit — native validation blocks it.
       await loginPage.passwordInput.fill('some-password')
@@ -130,7 +130,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'The login session persists after the Homepage is refreshed',
-    { ...qaseId(14), tag: '@regression' },
+    { ...qaseId(14), tag: ['@regression', '@login'] },
     async ({ page, request, loginPage }) => {
       const seeded = await registerUser(request)
 
@@ -149,7 +149,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'A logged-in user is automatically redirected from the Login page to the Homepage',
-    { ...qaseId(15), tag: '@regression' },
+    { ...qaseId(15), tag: ['@regression', '@login'] },
     async ({ page, request }) => {
       const seeded = await registerUser(request)
 
@@ -172,7 +172,7 @@ test.describe('WEB > Login', () => {
 
   test(
     'An anonymous user is automatically redirected from the Order History page to the Login page',
-    { ...qaseId(16), tag: '@regression' },
+    { ...qaseId(16), tag: ['@regression', '@login'] },
     async ({ page }) => {
       // Step 1: no active session, opening /orders directly redirects to Login;
       // the Order History page's content is never actually visible.

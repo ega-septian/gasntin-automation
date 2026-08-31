@@ -9,7 +9,7 @@ test.describe('API > Checkout', () => {
 
   test(
     "POST /orders rejects checkout when a requested item's quantity exceeds its current available stock",
-    { ...qaseId(52), tag: '@regression' },
+    { ...qaseId(52), tag: ['@regression', '@checkout'] },
     async ({ request }) => {
       const seeded = await registerUser(request)
       const item = await findProductWithStock(request, 1)
@@ -42,7 +42,7 @@ test.describe('API > Checkout', () => {
 
   test(
     "POST /orders succeeds when a requested item's quantity exactly equals its current available stock",
-    { ...qaseId(53), tag: '@smoke' },
+    { ...qaseId(53), tag: ['@smoke', '@checkout'] },
     async ({ request }) => {
       const seeded = await registerUser(request)
       const item = await findProductWithStock(request, 1)
@@ -81,7 +81,7 @@ test.describe('API > Checkout', () => {
 
   test(
     'POST /orders is rejected without a valid Authorization token',
-    { ...qaseId(54), tag: '@regression' },
+    { ...qaseId(54), tag: ['@regression', '@checkout'] },
     async ({ request }) => {
       // Step 1: submit an otherwise valid checkout body with no Authorization
       // header at all.

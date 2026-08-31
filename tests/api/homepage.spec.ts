@@ -10,7 +10,7 @@ const TIMESTAMP_FORMAT = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
 test.describe('API > Homepage', () => {
   test(
     'GET /api/assets returns every uploaded asset',
-    { ...qaseId(17), tag: '@regression' },
+    { ...qaseId(17), tag: ['@regression', '@homepage'] },
     async ({ request }) => {
       // Step 1: request the assets list.
       const res = await listAssets(request)
@@ -38,7 +38,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products with no query params returns the newest products up to the default limit',
-    { ...qaseId(18), tag: '@smoke' },
+    { ...qaseId(18), tag: ['@smoke', '@homepage'] },
     async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
       await seedProduct(token, buildProductPayload())
@@ -62,7 +62,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products?sort=best_selling orders products by total units sold, descending',
-    { ...qaseId(19), tag: '@regression' },
+    { ...qaseId(19), tag: ['@regression', '@homepage'] },
     async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
       const bestSeller = await seedProduct(token, buildProductPayload())
@@ -98,7 +98,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products?sort= with an invalid value is rejected',
-    { ...qaseId(20), tag: '@regression' },
+    { ...qaseId(20), tag: ['@regression', '@homepage'] },
     async ({ request }) => {
       // Step 1: request products with an unsupported sort value.
       const res = await listProducts(request, { sort: 'invalid' })
@@ -116,7 +116,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products?limit= with a non-numeric or non-positive value is rejected',
-    { ...qaseId(21), tag: '@regression' },
+    { ...qaseId(21), tag: ['@regression', '@homepage'] },
     async ({ request }) => {
       // Step 1: request products with a non-numeric limit.
       const nonNumeric = await listProducts(request, { limit: 'abc' })
@@ -143,7 +143,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products/filters returns brand, gender, category, subcategory, and size facets with live counts',
-    { ...qaseId(22), tag: '@regression' },
+    { ...qaseId(22), tag: ['@regression', '@homepage'] },
     async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
       const seeded = await seedProduct(
@@ -185,7 +185,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products?brand= filters results to only that brand',
-    { ...qaseId(23), tag: '@regression' },
+    { ...qaseId(23), tag: ['@regression', '@homepage'] },
     async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
       const seeded = await seedProduct(token, buildProductPayload({ brand: 'SUKO' }))
@@ -207,7 +207,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products?category= filters results, and combines with other filters as AND',
-    { ...qaseId(24), tag: '@regression' },
+    { ...qaseId(24), tag: ['@regression', '@homepage'] },
     async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
       const wanitaOuterwear = await seedProduct(
@@ -257,7 +257,7 @@ test.describe('API > Homepage', () => {
 
   test(
     'GET /api/products?category= for a category with no matching products returns an empty array, not an error',
-    { ...qaseId(25), tag: '@regression' },
+    { ...qaseId(25), tag: ['@regression', '@homepage'] },
     async ({ request }) => {
       // Step 1: request products for a category that doesn't exist.
       const res = await listProducts(request, { category: 'BogusCategoryXYZ' })
