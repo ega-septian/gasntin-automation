@@ -76,6 +76,13 @@ jobs:
           npm ci
           npx playwright install --with-deps
 
+      # Fresh CI database has no assets (no migration seeds one) — seed
+      # exactly one so the assets test's precondition actually holds here,
+      # the same way it already holds in local dev (uploaded manually once).
+      # Mirrors the same step in web-testing's own api-homepage-tests.yml.
+      - name: Seed CI-only test data
+        run: node scripts/seed-ci-assets.mjs
+
       - name: Run Playwright tests
         run: npx playwright test
         env:
