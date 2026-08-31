@@ -1,13 +1,15 @@
 ---
 name: playwright-ci
-description: Production-ready CI/CD configurations for Playwright — GitHub Actions, GitLab CI, CircleCI, Azure DevOps, Jenkins, Docker, parallel sharding, reporting, code coverage, and global setup/teardown.
+description: Production-ready CI/CD configurations for Playwright on GitHub Actions — parallel sharding, reporting, multi-project config, and global setup/teardown.
 ---
 
 # Playwright CI/CD
 
 > Ship reliable tests in every pipeline — CI-specific patterns for speed, stability, and actionable reports.
 
-**9 guides** covering CI/CD setup, parallel execution, containerized runs, reporting, and infrastructure patterns for all major CI providers.
+**5 guides** covering GitHub Actions CI/CD setup, parallel execution, reporting, and infrastructure patterns.
+
+> Pruned for this project's actual CI (GitHub Actions only, no GitLab/CircleCI/Azure/Jenkins, no Docker containerization of the app itself, no code coverage collection) — 4 guides not applicable here were removed. See `git log` on this file if you ever need one back.
 
 ## Golden Rules
 
@@ -27,15 +29,12 @@ description: Production-ready CI/CD configurations for Playwright — GitHub Act
 | Provider | Guide |
 |---|---|
 | GitHub Actions | [ci-github-actions.md](ci-github-actions.md) |
-| GitLab CI | [ci-gitlab.md](ci-gitlab.md) |
-| CircleCI / Azure DevOps / Jenkins | [ci-other.md](ci-other.md) |
 
 ### Execution & Scaling
 
 | Topic | Guide |
 |---|---|
 | Parallel execution & sharding | [parallel-and-sharding.md](parallel-and-sharding.md) |
-| Docker & containers | [docker-and-containers.md](docker-and-containers.md) |
 | Multi-project config | [projects-and-dependencies.md](projects-and-dependencies.md) |
 
 ### Reporting & Setup
@@ -43,5 +42,4 @@ description: Production-ready CI/CD configurations for Playwright — GitHub Act
 | Topic | Guide |
 |---|---|
 | Reports & artifacts | [reporting-and-artifacts.md](reporting-and-artifacts.md) |
-| Code coverage | [test-coverage.md](test-coverage.md) |
 | Global setup/teardown | [global-setup-teardown.md](global-setup-teardown.md) |

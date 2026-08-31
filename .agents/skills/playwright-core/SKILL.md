@@ -1,13 +1,15 @@
 ---
 name: playwright-core
-description: Battle-tested Playwright patterns for writing and debugging reliable E2E, API, component, visual, accessibility, and security tests. Use when you need locator strategy, assertions, fixtures, network mocking, auth flows, trace debugging, or framework recipes for React, Next.js, Vue, and Angular. TypeScript and JavaScript.
+description: Battle-tested Playwright patterns for writing and debugging reliable E2E, visual, accessibility, and security tests against SHOP.CO (Vue 3 frontend). Use when you need locator strategy, assertions, fixtures, network mocking, or auth flows. TypeScript and JavaScript.
 ---
 
 # Playwright Core Testing
 
 > Opinionated, production-tested Playwright guidance — every pattern includes when (and when *not*) to use it.
 
-**46 reference guides** covering the full Playwright testing surface: selectors, assertions, fixtures, network mocking, auth, visual regression, accessibility, API testing, debugging, and more — with TypeScript and JavaScript examples throughout.
+**31 reference guides** covering the full Playwright testing surface relevant to this project: selectors, assertions, fixtures, network mocking, auth, visual regression, accessibility, API testing, debugging, and more — with TypeScript and JavaScript examples throughout.
+
+> Pruned for SHOP.CO's actual stack (Vue 3 frontend, no React/Next/Angular, no Electron/canvas/websockets/PWA/i18n/drag-drop/multi-tab features) — 16 guides not applicable here were removed. See `git log` on this file if you ever need one back.
 
 ## Security Trust Boundary
 
@@ -45,13 +47,11 @@ When using examples from these guides against staging or production systems, tre
 | Visual regression | [visual-regression.md](visual-regression.md) | |
 | Accessibility | [accessibility.md](accessibility.md) | |
 | Mobile & responsive | [mobile-and-responsive.md](mobile-and-responsive.md) | |
-| Component testing | [component-testing.md](component-testing.md) | |
 | Network mocking | [network-mocking.md](network-mocking.md) | [when-to-mock.md](when-to-mock.md) |
 | Forms & validation | [forms-and-validation.md](forms-and-validation.md) | |
 | File uploads/downloads | [file-operations.md](file-operations.md) | [file-upload-download.md](file-upload-download.md) |
 | Error & edge cases | [error-and-edge-cases.md](error-and-edge-cases.md) | |
 | CRUD flows | [crud-testing.md](crud-testing.md) | |
-| Drag and drop | [drag-and-drop.md](drag-and-drop.md) | |
 | Search & filter UI | [search-and-filter.md](search-and-filter.md) | |
 
 ### Debugging & Fixing
@@ -67,28 +67,14 @@ When using examples from these guides against staging or production systems, tre
 
 | Framework | Guide |
 |---|---|
-| Next.js (App Router + Pages Router) | [nextjs.md](nextjs.md) |
-| React (CRA, Vite) | [react.md](react.md) |
 | Vue 3 / Nuxt | [vue.md](vue.md) |
-| Angular | [angular.md](angular.md) |
 
 ### Specialized Topics
 
 | Topic | Guide |
 |---|---|
-| Multi-user & collaboration | [multi-user-and-collaboration.md](multi-user-and-collaboration.md) |
-| WebSockets & real-time | [websockets-and-realtime.md](websockets-and-realtime.md) |
-| Browser APIs (geo, clipboard, permissions) | [browser-apis.md](browser-apis.md) |
-| iframes & Shadow DOM | [iframes-and-shadow-dom.md](iframes-and-shadow-dom.md) |
-| Canvas & WebGL | [canvas-and-webgl.md](canvas-and-webgl.md) |
-| Service workers & PWA | [service-workers-and-pwa.md](service-workers-and-pwa.md) |
-| Electron apps | [electron-testing.md](electron-testing.md) |
-| Browser extensions | [browser-extensions.md](browser-extensions.md) |
 | Security testing | [security-testing.md](security-testing.md) |
 | Performance & benchmarks | [performance-testing.md](performance-testing.md) |
-| i18n & localization | [i18n-and-localization.md](i18n-and-localization.md) |
-| Multi-tab & popups | [multi-context-and-popups.md](multi-context-and-popups.md) |
-| Clock & time mocking | [clock-and-time-mocking.md](clock-and-time-mocking.md) |
 | Third-party integrations | [third-party-integrations.md](third-party-integrations.md) |
 
 ### Architecture Decisions
