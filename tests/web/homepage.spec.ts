@@ -105,4 +105,79 @@ test.describe('WEB > Homepage', () => {
       await expect(shopPage.productCards).toHaveCount(0)
     }
   )
+
+  test(
+    "Navbar cart icon reflects the cart's item count and navigates to the Cart page",
+    { ...qaseId(31), tag: ['@regression', '@homepage'] },
+    async ({ page, request, homePage, productDetailPage, cartPage, seedProduct }) => {
+      const { token } = await registerUser(request)
+      const product = await seedProduct(token, buildProductPayload())
+
+      // Step 1: open the Homepage with an empty cart; the cart icon shows no
+      // item-count badge.
+      await homePage.open()
+      await expect(homePage.navbar.cartBadge).not.toBeVisible()
+
+      // Step 2: open the product's detail page, click "Add to Cart", then
+      // return to the Homepage; the cart icon now shows a badge with the
+      // correct item count.
+      await productDetailPage.open(product.id)
+      await productDetailPage.addToCart()
+      await homePage.open()
+      await expect(homePage.navbar.cartBadge).toHaveText('1')
+
+      // Step 3: click the cart icon; redirected to the Cart page, showing
+      // the item that was added.
+      await homePage.navbar.clickCart()
+      await expect(page).toHaveURL(/\/cart$/)
+      await expect(cartPage.root).toBeVisible()
+      await expect(cartPage.itemName).toHaveText(product.name)
+    }
+  )
+
+  test(
+    'Guest sees a "Masuk" button in the navbar that opens the Login page',
+    { ...qaseId(32), tag: ['@regression', '@homepage'] },
+    async ({ page, homePage }) => {
+      // Step 1: open the Homepage while not logged in; the navbar shows a
+      // "Masuk" button and no account icon or "Keluar" button.
+      await homePage.open()
+      await expect(homePage.navbar.ctaButton).toHaveText('Masuk')
+      await expect(homePage.navbar.accountButton).not.toBeVisible()
+      await expect(homePage.navbar.logoutButton).not.toBeVisible()
+
+      // Step 2: click the "Masuk" button; redirected to the Login page.
+      await homePage.navbar.clickCta()
+      await expect(page).toHaveURL(/\/login$/)
+    }
+  )
+
+  test(
+    'Logged-in user sees account and logout controls instead of "Masuk", and logging out returns to a logged-out Homepage',
+    { ...qaseId(33), tag: ['@smoke', '@homepage'] },
+    async ({ page, request, homePage }) => {
+      const seeded = await registerUser(request)
+      await page.goto('/')
+      await page.evaluate(
+        ({ token, user }) => {
+          localStorage.setItem('auth_token', token)
+          localStorage.setItem('auth_user', JSON.stringify(user))
+        },
+        { token: seeded.token, user: seeded.user }
+      )
+
+      // Step 1: open the Homepage while logged in; the navbar shows the 👤
+      // icon and a "Keluar" button instead of the "Masuk" button.
+      await homePage.open()
+      await expect(homePage.navbar.accountButton).toBeVisible()
+      await expect(homePage.navbar.logoutButton).toHaveText('Keluar')
+      await expect(homePage.navbar.ctaButton).not.toBeVisible()
+
+      // Step 2: click the "Keluar" button; the user is logged out and
+      // redirected to the Homepage, where the "Masuk" button is shown again.
+      await homePage.navbar.clickLogout()
+      await expect(page).toHaveURL(/\/$/)
+      await expect(homePage.navbar.ctaButton).toHaveText('Masuk')
+    }
+  )
 })
