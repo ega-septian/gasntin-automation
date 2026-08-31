@@ -6,7 +6,9 @@ import type { CreateProductPayload } from '../api/products.js'
  * request body grows instead of hardcoding every field at every call site.
  * Same pattern as data/users.ts's buildRegisterPayload.
  */
-export function buildProductPayload(overrides: Partial<CreateProductPayload> = {}): CreateProductPayload {
+export function buildProductPayload(
+  overrides: Partial<CreateProductPayload> = {}
+): CreateProductPayload {
   return {
     brand: 'NEVADA',
     name: `Seed Product ${Date.now()}-${Math.random().toString(36).slice(2)}`,

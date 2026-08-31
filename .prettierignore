@@ -1,0 +1,10 @@
+# Prettier is for the TS test code — not the project's markdown
+# knowledge base (rules, agent definitions, skill guides, docs).
+.claude/
+.agents/
+docs/
+*.md
+
+node_modules/
+playwright-report/
+test-results/

@@ -106,7 +106,12 @@ export async function findProductWithStock(
       await detailRes.json()
     for (const s of detail.sizes) {
       if (s.stock >= minStock) {
-        eligible.push({ productId: product.id, productName: detail.name, size: s.size, stock: s.stock })
+        eligible.push({
+          productId: product.id,
+          productName: detail.name,
+          size: s.size,
+          stock: s.stock,
+        })
       }
     }
   }
@@ -238,7 +243,9 @@ export async function seedProduct(
 ): Promise<Product> {
   const res = await createProduct(request, token, payload)
   if (res.status() !== 201) {
-    throw new Error(`Seeding a product failed: expected 201, got ${res.status()} — ${await res.text()}`)
+    throw new Error(
+      `Seeding a product failed: expected 201, got ${res.status()} — ${await res.text()}`
+    )
   }
   return res.json()
 }
@@ -255,7 +262,9 @@ export async function seedSale(
 ): Promise<Sale> {
   const res = await recordSale(request, token, productId, quantity)
   if (res.status() !== 201) {
-    throw new Error(`Seeding a sale failed: expected 201, got ${res.status()} — ${await res.text()}`)
+    throw new Error(
+      `Seeding a sale failed: expected 201, got ${res.status()} — ${await res.text()}`
+    )
   }
   return res.json()
 }

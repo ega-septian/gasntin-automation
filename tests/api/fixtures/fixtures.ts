@@ -32,7 +32,9 @@ export const test = base.extend<ApiFixtures>({
     for (const { token, id } of created) {
       const res = await deleteProduct(request, token, id)
       if (!res.ok()) {
-        console.warn(`seedProduct fixture: failed to clean up product ${id} (status ${res.status()})`)
+        console.warn(
+          `seedProduct fixture: failed to clean up product ${id} (status ${res.status()})`
+        )
       }
     }
   },
