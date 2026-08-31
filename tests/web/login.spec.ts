@@ -5,7 +5,7 @@ import { uniqueEmail } from '@data/users.js'
 
 test.describe('WEB > Login', () => {
   test(
-    'Successful login via the Login form, redirected to the Dashboard page',
+    'Successful login via the Login form, redirected to the Homepage',
     qaseId(9),
     async ({ page, request, loginPage }) => {
       const seeded = await registerUser(request)
@@ -18,9 +18,10 @@ test.describe('WEB > Login', () => {
       // Step 2: fill in valid credentials and submit.
       await loginPage.login(seeded.email, seeded.password)
 
-      // Step 3: redirected to the Dashboard, session persisted.
-      await expect(page).toHaveURL(/\/dashboard$/)
-      await expect(page.getByTestId('dashboard-welcome-heading')).toContainText(seeded.email)
+      // Step 3: redirected to the Homepage, session persisted (the navbar now
+      // reflects the logged-in state instead of the guest "Masuk" CTA).
+      await expect(page).toHaveURL(/\/$/)
+      await expect(page.getByTestId('navbar-logout-button')).toBeVisible()
     }
   )
 
@@ -55,6 +56,17 @@ test.describe('WEB > Login', () => {
         await new Promise((resolve) => setTimeout(resolve, 800))
         await route.continue()
       })
+      // On success the app navigates to the Homepage right after the button
+      // re-enables, which normally swaps it out of the DOM in the same tick
+      // before Step 3 can observe the "re-enabled, back to Masuk" state. The
+      // Homepage view is only fetched on demand (it hasn't been loaded yet,
+      // since the test starts on the Login page directly), so delaying that
+      // fetch keeps the Login page rendered long enough for the reverted
+      // button state to actually be observable, without altering app behavior.
+      await page.route('**/views/HomeView.vue*', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        await route.continue()
+      })
 
       // Step 1: submit valid credentials; the button immediately shows the loading state.
       await loginPage.emailInput.fill(seeded.email)
@@ -68,12 +80,10 @@ test.describe('WEB > Login', () => {
       // login request is ever sent — the double-submit is prevented structurally.
       await expect(loginPage.submitButton).toBeDisabled()
 
-      // Step 3: once the process finishes, the user proceeds to the Dashboard —
-      // proof the loading state didn't get stuck. The literal "button reverts to
-      // 'Masuk'" sub-claim isn't independently asserted here: on this success path
-      // the app navigates away almost immediately after loading clears, making that
-      // intermediate state a race condition rather than something safe to assert.
-      await expect(page).toHaveURL(/\/dashboard$/)
+      // Step 3: once the process finishes, the button re-enables, the loading
+      // animation disappears, and the text reverts to "Masuk".
+      await expect(loginPage.submitButton).toBeEnabled()
+      await expect(loginPage.submitButton).toHaveText('Masuk')
       expect(loginRequestCount).toBe(1)
     }
   )
@@ -124,24 +134,26 @@ test.describe('WEB > Login', () => {
   )
 
   test(
-    'The login session persists after the Dashboard page is refreshed',
+    'The login session persists after the Homepage is refreshed',
     qaseId(14),
     async ({ page, request, loginPage }) => {
       const seeded = await registerUser(request)
 
-      // Step 1: log in through the form until reaching the Dashboard.
+      // Step 1: log in through the form until reaching the Homepage, which
+      // displays a "Keluar" button.
       await loginPage.login(seeded.email, seeded.password)
-      await expect(page).toHaveURL(/\/dashboard$/)
-      await expect(page.getByTestId('dashboard-logout-button')).toBeVisible()
+      await expect(page).toHaveURL(/\/$/)
+      await expect(page.getByTestId('navbar-logout-button')).toContainText('Keluar')
 
       // Step 2: a full page reload must not throw the user back to the Login page.
       await page.reload()
-      await expect(page).toHaveURL(/\/dashboard$/)
+      await expect(page).toHaveURL(/\/$/)
+      await expect(page.getByTestId('navbar-logout-button')).toContainText('Keluar')
     }
   )
 
   test(
-    'A logged-in user is automatically redirected from the Login page to the Dashboard',
+    'A logged-in user is automatically redirected from the Login page to the Homepage',
     qaseId(15),
     async ({ page, request }) => {
       const seeded = await registerUser(request)
@@ -159,28 +171,28 @@ test.describe('WEB > Login', () => {
       )
 
       // Step 1: opening /login while already logged in redirects straight to the
-      // Dashboard — the Login page is never actually rendered.
+      // Homepage — the Login page is never actually rendered.
       await page.goto('/login')
-      await expect(page).toHaveURL(/\/dashboard$/)
+      await expect(page).toHaveURL(/\/$/)
       await expect(page.getByTestId('login-form')).not.toBeVisible()
     }
   )
 
   test(
-    'An anonymous user is automatically redirected from the Dashboard to the Login page',
+    'An anonymous user is automatically redirected from the Order History page to the Login page',
     qaseId(16),
     async ({ page }) => {
-      // Step 1: no active session, opening /dashboard directly redirects to Login.
-      await page.goto('/dashboard')
-      await expect(page).toHaveURL(/\/login$/)
-      await expect(page.getByTestId('dashboard-page')).not.toBeVisible()
+      // Step 1: no active session, opening /orders directly redirects to Login;
+      // the Order History page's content is never actually visible.
+      await page.goto('/orders')
+      await expect(page).toHaveURL(/\/login(\?|$)/)
+      await expect(page.getByTestId('order-history-page')).not.toBeVisible()
 
       // Step 2 (edge case): the client-side guard only checks whether session data
-      // is present, not whether it's valid — so a corrupted/expired token still
-      // lets the user land on the Dashboard visually. Verifiable part only: the
-      // guard lets it through. The PRD/TRD's own documented gap — "any request for
-      // server data would be rejected" — isn't observable here, since the Dashboard
-      // page currently makes no API calls at all on mount.
+      // is present, not whether it's valid — so a tampered/expired token still lets
+      // the user land on the Order History page visually. But the page's own request
+      // to load the order list is then rejected by the server, so no real order data
+      // is shown — the user actually sees the empty state instead.
       await page.evaluate(() => {
         localStorage.setItem('auth_token', 'expired-or-tampered-token')
         localStorage.setItem(
@@ -188,9 +200,9 @@ test.describe('WEB > Login', () => {
           JSON.stringify({ id: 'x', email: 'ghost@example.com', created_at: new Date().toISOString() })
         )
       })
-      await page.goto('/dashboard')
-      await expect(page).toHaveURL(/\/dashboard$/)
-      await expect(page.getByTestId('dashboard-page')).toBeVisible()
+      await page.goto('/orders')
+      await expect(page).toHaveURL(/\/orders$/)
+      await expect(page.getByTestId('order-history-empty-state')).toContainText('Belum ada pesanan.')
     }
   )
 })
