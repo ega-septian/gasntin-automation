@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { registerUser } from '../../api/auth.js'
-import { findProductWithStock, getProduct } from '../../api/products.js'
-import { checkout, buildCheckoutPayload } from '../../api/orders.js'
-import { qaseId } from '../../support/qase.js'
+import { registerUser } from '@api/auth.js'
+import { findProductWithStock, getProduct } from '@api/products.js'
+import { checkout, buildCheckoutPayload } from '@api/orders.js'
+import { qaseId } from '@support/qase.js'
 
 test.describe('API > Checkout', () => {
   test.describe.configure({ mode: 'serial' })

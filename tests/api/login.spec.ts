@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { registerUser, loginUser, login, me } from '../../api/auth.js'
-import { buildLoginPayload, uniqueEmail } from '../../data/users.js'
-import { decodeJwt, withTamperedSignature, asAlgNoneToken } from '../../support/jwt.js'
-import { qaseId } from '../../support/qase.js'
+import { registerUser, loginUser, login, me } from '@api/auth.js'
+import { buildLoginPayload, uniqueEmail } from '@data/users.js'
+import { decodeJwt, withTamperedSignature, asAlgNoneToken } from '@support/jwt.js'
+import { qaseId } from '@support/qase.js'
 
 const GENERIC_AUTH_ERROR = 'email atau password salah'
 

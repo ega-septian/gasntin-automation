@@ -1,9 +1,9 @@
 import { test, expect } from './fixtures/fixtures.js'
-import { listAssets } from '../../api/assets.js'
-import { listProducts, getProductFilters, seedSale } from '../../api/products.js'
-import { registerUser } from '../../api/auth.js'
-import { qaseId } from '../../support/qase.js'
-import { buildProductPayload } from '../../data/products.js'
+import { listAssets } from '@api/assets.js'
+import { listProducts, getProductFilters, seedSale } from '@api/products.js'
+import { registerUser } from '@api/auth.js'
+import { qaseId } from '@support/qase.js'
+import { buildProductPayload } from '@data/products.js'
 
 const TIMESTAMP_FORMAT = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
 

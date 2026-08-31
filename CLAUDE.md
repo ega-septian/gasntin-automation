@@ -46,6 +46,10 @@ Project rules live one-per-file under `.claude/rules/` and are imported below â€
 
 @.claude/rules/data-factories-in-data-folder.md
 
+### Import `api/`, `data/`, `support/`, `setup/` via Their `@` Alias
+
+@.claude/rules/use-path-aliases.md
+
 ### Step Writing Language (WEB/UI test cases only)
 
 @.claude/rules/web-step-writing-language.md

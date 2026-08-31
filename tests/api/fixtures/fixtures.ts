@@ -4,7 +4,7 @@ import {
   deleteProduct,
   type CreateProductPayload,
   type Product,
-} from '../../../api/products.js'
+} from '@api/products.js'
 
 interface ApiFixtures {
   seedProduct: (token: string, payload: CreateProductPayload) => Promise<Product>

@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { register, me } from '../../api/auth.js'
-import { buildRegisterPayload, uniqueEmail } from '../../data/users.js'
-import { findUserByEmail, BCRYPT_PREFIX } from '../../support/db.js'
-import { qaseId } from '../../support/qase.js'
+import { register, me } from '@api/auth.js'
+import { buildRegisterPayload, uniqueEmail } from '@data/users.js'
+import { findUserByEmail, BCRYPT_PREFIX } from '@support/db.js'
+import { qaseId } from '@support/qase.js'
 
 test.describe('API > Registration', () => {
   test(
