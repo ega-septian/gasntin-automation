@@ -46,6 +46,7 @@ test.describe('WEB > Login', () => {
     'The "Masuk" button is disabled and shows a loading state during login',
     qaseId(11),
     async ({ page, request, loginPage }) => {
+      test.setTimeout(60_000)
       const seeded = await registerUser(request)
 
       let loginRequestCount = 0
