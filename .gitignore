@@ -25,4 +25,10 @@ blob-report/
 
 # PM/QA working docs (PRDs, TRDs, specs) — drafted locally for reference,
 # not meant to be pushed/shared via the repo.
-docs/
+# (docs/* instead of docs/ — a whole-directory ignore can't be reopened
+# per-file by a negation pattern below; this can.)
+docs/*
+# Exception: the app's factual page/route inventory is a tracked, shared
+# reference (not a draft PRD/spec) — agents rely on it to avoid inventing
+# pages that don't exist (see CLAUDE.md's "App Map" section).
+!docs/app-map.md

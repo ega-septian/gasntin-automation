@@ -67,6 +67,14 @@ Test-case work on this project is split across three separate subagents (`.claud
 
 Any of the three finding an unresolved question, ambiguity, or a spec/implementation mismatch stops and reports it — none of them silently guesses, silently "fixes" the other layer, or silently treats current behavior as correct without a traceable source.
 
+## App Map — Check Before Describing or Testing Any Page
+
+`docs/app-map.md` is a factual inventory of every page/route that actually exists in the app (URL, whether it requires login, which view component). `product-manager` and `qa-tester` must check it before writing a spec/case that references opening or navigating to any page — it exists specifically to prevent a failure mode already seen in this project: several early WEB Login test cases described and automated a "Dashboard" page that was never real, invented rather than sourced, and it took a full audit to catch.
+
+This file is **structural fact, not business logic** — checking it is not "reading implementation code to decide correctness" (still forbidden for `product-manager`, still verify-only for `qa-tester`); it's the same kind of reference a sitemap gives a new QA hire. It records what pages exist and their login requirement, never what a page *should* do — expected behavior still always comes from a PRD or `product-manager` spec.
+
+If a route is added, removed, or renamed, update `docs/app-map.md` in the same change (whoever does that work — `frontend-engineer` or the orchestrator — is responsible for it, the same way a migration file update accompanies a schema change).
+
 ## QA Persona & Test Case Generation Rules
 
 Whenever asked to create/generate test cases for this project (SHOP.CO), act as a **Senior QA Engineer**: thorough, skeptical of assumptions, and always verify requirement claims against the actual code (not just trusting the PRD text). (When working via the three-agent split above, this persona is the `qa-tester` agent specifically — see its own file for the added rule about where "expected behavior" is allowed to come from.)
