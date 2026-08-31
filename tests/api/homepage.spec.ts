@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/fixtures.js'
 import { listAssets } from '../../api/assets.js'
-import { listProducts, getProductFilters, seedProduct, seedSale } from '../../api/products.js'
+import { listProducts, getProductFilters, seedSale } from '../../api/products.js'
 import { registerUser } from '../../api/auth.js'
 import { qaseId } from '../../support/qase.js'
 import { buildProductPayload } from '../../data/products.js'
@@ -35,9 +35,9 @@ test.describe('API > Homepage', () => {
   test(
     'GET /api/products with no query params returns the newest products up to the default limit',
     qaseId(18),
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
-      await seedProduct(request, token, buildProductPayload())
+      await seedProduct(token, buildProductPayload())
 
       // Step 1: request products with no query parameters at all.
       const res = await listProducts(request)
@@ -59,10 +59,10 @@ test.describe('API > Homepage', () => {
   test(
     'GET /api/products?sort=best_selling orders products by total units sold, descending',
     qaseId(19),
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
-      const bestSeller = await seedProduct(request, token, buildProductPayload())
-      const worstSeller = await seedProduct(request, token, buildProductPayload())
+      const bestSeller = await seedProduct(token, buildProductPayload())
+      const worstSeller = await seedProduct(token, buildProductPayload())
       await seedSale(request, token, bestSeller.id, 100)
       await seedSale(request, token, worstSeller.id, 1)
 
@@ -140,13 +140,9 @@ test.describe('API > Homepage', () => {
   test(
     'GET /api/products/filters returns brand, gender, category, subcategory, and size facets with live counts',
     qaseId(22),
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
-      const seeded = await seedProduct(
-        request,
-        token,
-        buildProductPayload({ sizes: [{ size: 'L', stock: 5 }] })
-      )
+      const seeded = await seedProduct(token, buildProductPayload({ sizes: [{ size: 'L', stock: 5 }] }))
 
       // Step 1: request the filter facets.
       const res = await getProductFilters(request)
@@ -183,9 +179,9 @@ test.describe('API > Homepage', () => {
   test(
     'GET /api/products?brand= filters results to only that brand',
     qaseId(23),
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
-      const seeded = await seedProduct(request, token, buildProductPayload({ brand: 'SUKO' }))
+      const seeded = await seedProduct(token, buildProductPayload({ brand: 'SUKO' }))
 
       // Step 1: request products filtered to the SUKO brand. A high limit
       // keeps the seeded product in view regardless of catalog size.
@@ -205,15 +201,13 @@ test.describe('API > Homepage', () => {
   test(
     'GET /api/products?category= filters results, and combines with other filters as AND',
     qaseId(24),
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const { token } = await registerUser(request)
       const wanitaOuterwear = await seedProduct(
-        request,
         token,
         buildProductPayload({ category: 'Outerwear', gender: 'Wanita' })
       )
       const priaOuterwear = await seedProduct(
-        request,
         token,
         buildProductPayload({ category: 'Outerwear', gender: 'Pria' })
       )

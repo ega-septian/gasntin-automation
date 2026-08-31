@@ -193,6 +193,22 @@ export function createProduct(
 }
 
 /**
+ * Raw action — no assertions inside. Requires auth (any valid token). Soft-
+ * deletes a product server-side (see the backend's ProductRepo.SoftDelete) —
+ * used to clean up test-seeded products after a test runs; the storefront
+ * itself never calls this endpoint.
+ */
+export function deleteProduct(
+  request: APIRequestContext,
+  token: string,
+  id: string
+): Promise<APIResponse> {
+  return request.delete(`${API_BASE_URL}/api/products/${id}`, {
+    headers: authHeaders(token),
+  })
+}
+
+/**
  * Raw action — no assertions inside. Requires auth. Logs a sale event for an
  * existing product, feeding the "best_selling" sort.
  */
