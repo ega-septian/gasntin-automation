@@ -1,7 +1,32 @@
 import { test, expect } from '@playwright/test'
 import { listAssets } from '../../api/assets.js'
-import { listProducts, getProductFilters } from '../../api/products.js'
+import {
+  listProducts,
+  getProductFilters,
+  seedProduct,
+  seedSale,
+  type CreateProductPayload,
+} from '../../api/products.js'
+import { registerUser } from '../../api/auth.js'
 import { qaseId } from '../../support/qase.js'
+
+/**
+ * Default fields for a seeded catalog product — only the field(s) a given
+ * test actually cares about need to be overridden at the call site, same
+ * pattern as data/users.ts's buildRegisterPayload.
+ */
+function buildProductPayload(overrides: Partial<CreateProductPayload> = {}): CreateProductPayload {
+  return {
+    brand: 'NEVADA',
+    name: `Seed Product ${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    gender: 'Pria',
+    category: 'Atasan',
+    subcategory: 'Kaos',
+    price: 100000,
+    sizes: [{ size: 'M', stock: 10 }],
+    ...overrides,
+  }
+}
 
 const TIMESTAMP_FORMAT = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
 
@@ -36,6 +61,15 @@ test.describe('API > Homepage', () => {
     'GET /api/products with no query params returns the newest products up to the default limit',
     qaseId(18),
     async ({ request }) => {
+      // Seeds one fresh product so the response is guaranteed non-empty
+      // regardless of whatever else is already in the catalog. Its exact
+      // position isn't asserted — other tests in this suite seed products
+      // concurrently (fullyParallel), so only this suite's own creation
+      // order relative to the rest of the catalog is guaranteed, not a
+      // specific index.
+      const { token } = await registerUser(request)
+      await seedProduct(request, token, buildProductPayload())
+
       // Step 1: request products with no query parameters at all.
       const res = await listProducts(request)
       expect(res.status()).toBe(200)
@@ -43,7 +77,6 @@ test.describe('API > Homepage', () => {
       const body = await res.json()
       expect(Array.isArray(body)).toBe(true)
       expect(body.length).toBeLessThanOrEqual(4)
-      // Relies on the environment already having more than 4 products.
       expect(body.length).toBeGreaterThan(0)
 
       // Step 2: products are ordered newest first — created_at's
@@ -58,21 +91,40 @@ test.describe('API > Homepage', () => {
     'GET /api/products?sort=best_selling orders products by total units sold, descending',
     qaseId(19),
     async ({ request }) => {
-      // Step 1: request products ranked by best_selling.
-      const res = await listProducts(request, { sort: 'best_selling', limit: 24 })
+      // Seeds two products with a known, distinct sale history: one clearly
+      // outselling the other. Recorded through the same POST
+      // /api/products/:id/sales endpoint the real "record a sale" flow uses,
+      // so this proves the sort against genuine sale events rather than
+      // assuming the environment already has sale history to rank by.
+      const { token } = await registerUser(request)
+      const bestSeller = await seedProduct(request, token, buildProductPayload())
+      const worstSeller = await seedProduct(request, token, buildProductPayload())
+      await seedSale(request, token, bestSeller.id, 100)
+      await seedSale(request, token, worstSeller.id, 1)
+
+      // Step 1: request products ranked by best_selling. A high limit keeps
+      // both seeded products in view regardless of how large the rest of the
+      // catalog is.
+      const res = await listProducts(request, { sort: 'best_selling', limit: 1000 })
       expect(res.status()).toBe(200)
 
       const body = await res.json()
       expect(Array.isArray(body)).toBe(true)
-      // Relies on the environment already having at least one recorded sale.
       for (const product of body) {
         expect(typeof product.total_sold).toBe('number')
       }
 
-      // Step 2: total_sold is non-increasing from one product to the next.
+      // Step 2: total_sold is non-increasing from one product to the next,
+      // and the two seeded products land in the order their own sale
+      // volumes dictate.
       for (let i = 0; i < body.length - 1; i++) {
         expect(body[i].total_sold).toBeGreaterThanOrEqual(body[i + 1].total_sold)
       }
+      const bestSellerIndex = body.findIndex((p: { id: string }) => p.id === bestSeller.id)
+      const worstSellerIndex = body.findIndex((p: { id: string }) => p.id === worstSeller.id)
+      expect(bestSellerIndex).toBeGreaterThanOrEqual(0)
+      expect(worstSellerIndex).toBeGreaterThanOrEqual(0)
+      expect(bestSellerIndex).toBeLessThan(worstSellerIndex)
     }
   )
 
@@ -129,6 +181,16 @@ test.describe('API > Homepage', () => {
     'GET /api/products/filters returns brand, gender, category, subcategory, and size facets with live counts',
     qaseId(22),
     async ({ request }) => {
+      // Seeds one product carrying a value in every facet dimension
+      // (brand, gender, category, subcategory, size), so each facet is
+      // guaranteed at least one entry regardless of the rest of the catalog.
+      const { token } = await registerUser(request)
+      const seeded = await seedProduct(
+        request,
+        token,
+        buildProductPayload({ sizes: [{ size: 'L', stock: 5 }] })
+      )
+
       // Step 1: request the filter facets.
       const res = await getProductFilters(request)
       expect(res.status()).toBe(200)
@@ -141,8 +203,15 @@ test.describe('API > Homepage', () => {
         subcategory: expect.any(Array),
         size: expect.any(Array),
       })
-      // Relies on the environment already having at least one product with a
-      // brand, gender, category, subcategory, and size.
+      // The seeded product's own facet values must each appear, proving the
+      // facets are computed live rather than from a hardcoded/stale list.
+      expect(body.brand.some((f: { value: string }) => f.value === seeded.brand)).toBe(true)
+      expect(body.gender.some((f: { value: string }) => f.value === seeded.gender)).toBe(true)
+      expect(body.category.some((f: { value: string }) => f.value === seeded.category)).toBe(true)
+      expect(body.subcategory.some((f: { value: string }) => f.value === seeded.subcategory)).toBe(
+        true
+      )
+      expect(body.size.some((f: { value: string }) => f.value === 'L')).toBe(true)
       for (const facet of ['brand', 'gender', 'category', 'subcategory', 'size'] as const) {
         expect(body[facet].length).toBeGreaterThan(0)
       }
@@ -160,14 +229,20 @@ test.describe('API > Homepage', () => {
     'GET /api/products?brand= filters results to only that brand',
     qaseId(23),
     async ({ request }) => {
-      // Step 1: request products filtered to the SUKO brand.
-      const res = await listProducts(request, { brand: 'SUKO', limit: 24 })
+      // Seeds a product with brand SUKO so the filter has a known match
+      // regardless of whether the catalog already has one.
+      const { token } = await registerUser(request)
+      const seeded = await seedProduct(request, token, buildProductPayload({ brand: 'SUKO' }))
+
+      // Step 1: request products filtered to the SUKO brand. A high limit
+      // keeps the seeded product in view regardless of catalog size.
+      const res = await listProducts(request, { brand: 'SUKO', limit: 1000 })
       expect(res.status()).toBe(200)
 
       const body = await res.json()
       expect(Array.isArray(body)).toBe(true)
-      // Relies on the environment already having at least one SUKO product.
       expect(body.length).toBeGreaterThan(0)
+      expect(body.some((p: { id: string }) => p.id === seeded.id)).toBe(true)
       for (const product of body) {
         expect(product.brand).toBe('SUKO')
       }
@@ -178,21 +253,44 @@ test.describe('API > Homepage', () => {
     'GET /api/products?category= filters results, and combines with other filters as AND',
     qaseId(24),
     async ({ request }) => {
-      // Step 1: request products filtered to the Outerwear category.
-      const categoryOnly = await listProducts(request, { category: 'Outerwear', limit: 24 })
+      // Seeds two Outerwear products for different genders, so the
+      // category-only vs. combined-with-gender comparison is proven against
+      // known data instead of assuming the catalog already has Outerwear
+      // products spread across more than one gender.
+      const { token } = await registerUser(request)
+      const wanitaOuterwear = await seedProduct(
+        request,
+        token,
+        buildProductPayload({ category: 'Outerwear', gender: 'Wanita' })
+      )
+      const priaOuterwear = await seedProduct(
+        request,
+        token,
+        buildProductPayload({ category: 'Outerwear', gender: 'Pria' })
+      )
+
+      // Step 1: request products filtered to the Outerwear category. A high
+      // limit keeps both seeded products in view regardless of catalog size.
+      const categoryOnly = await listProducts(request, { category: 'Outerwear', limit: 1000 })
       expect(categoryOnly.status()).toBe(200)
       const categoryOnlyBody = await categoryOnly.json()
       expect(Array.isArray(categoryOnlyBody)).toBe(true)
-      // Relies on the environment already having Outerwear products for more
-      // than one gender.
       expect(categoryOnlyBody.length).toBeGreaterThan(0)
       for (const product of categoryOnlyBody) {
         expect(product.category).toBe('Outerwear')
       }
+      const categoryOnlyIds = categoryOnlyBody.map((p: { id: string }) => p.id)
+      expect(categoryOnlyIds).toContain(wanitaOuterwear.id)
+      expect(categoryOnlyIds).toContain(priaOuterwear.id)
 
       // Step 2: combine with gender=Wanita; both filters apply together (AND),
-      // narrowing the result to no more than the category-only count.
-      const combined = await listProducts(request, { category: 'Outerwear', gender: 'Wanita', limit: 24 })
+      // narrowing the result to no more than the category-only count and
+      // excluding the seeded Pria product.
+      const combined = await listProducts(request, {
+        category: 'Outerwear',
+        gender: 'Wanita',
+        limit: 1000,
+      })
       expect(combined.status()).toBe(200)
       const combinedBody = await combined.json()
       expect(Array.isArray(combinedBody)).toBe(true)
@@ -200,6 +298,9 @@ test.describe('API > Homepage', () => {
         expect(product.category).toBe('Outerwear')
         expect(product.gender).toBe('Wanita')
       }
+      const combinedIds = combinedBody.map((p: { id: string }) => p.id)
+      expect(combinedIds).toContain(wanitaOuterwear.id)
+      expect(combinedIds).not.toContain(priaOuterwear.id)
       expect(combinedBody.length).toBeLessThanOrEqual(categoryOnlyBody.length)
     }
   )

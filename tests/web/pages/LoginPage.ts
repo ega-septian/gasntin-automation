@@ -14,9 +14,16 @@ export class LoginPage {
 
   constructor(page: Page) {
     this.page = page
-    this.emailInput = page.getByTestId('login-email-input')
-    this.passwordInput = page.getByTestId('login-password-input')
-    this.submitButton = page.getByTestId('login-submit-button')
+    this.emailInput = page.getByLabel('Email')
+    this.passwordInput = page.getByLabel('Password')
+    // Scoped to the login <form> — the site's navbar also has a "Masuk" CTA
+    // button, so the bare role+name locator alone matches both. The name is
+    // matched as a regex covering both of the button's own states ("Masuk"
+    // and, while the login request is in flight, "Memproses...") so the
+    // locator still resolves to the same element once its label changes.
+    this.submitButton = page
+      .locator('form')
+      .getByRole('button', { name: /^(Masuk|Memproses\.\.\.)$/ })
     this.errorMessage = page.getByTestId('login-error-message')
     this.togglePasswordVisibilityButton = page.getByTestId('login-toggle-password-visibility')
   }

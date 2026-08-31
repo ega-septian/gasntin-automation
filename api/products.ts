@@ -1,5 +1,17 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { API_BASE_URL } from '../playwright.config.js'
+import { authHeaders } from './auth.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+/** Reused as the placeholder image for every seeded product's gallery. */
+const SEED_IMAGE_PATH = path.join(__dirname, '../fixtures/test-asset.png')
+
+/** Mirrors models.MaxProductImages — CreateProduct rejects any other count. */
+const MAX_PRODUCT_IMAGES = 3
 
 export interface ListProductsParams {
   sort?: string
@@ -107,4 +119,127 @@ export async function findProductWithStock(
   }
 
   return eligible[Math.floor(Math.random() * eligible.length)]
+}
+
+export interface Product {
+  id: string
+  brand: string
+  name: string
+  description: string
+  gender: string
+  category: string
+  subcategory: string
+  price: number
+  discount: number
+  total_sold: number
+  image_url: string | null
+  created_at: string
+}
+
+export interface Sale {
+  id: string
+  product_id: string
+  quantity: number
+  sold_at: string
+}
+
+export interface CreateProductPayload {
+  brand: string
+  name: string
+  description?: string
+  gender: string
+  category: string
+  subcategory?: string
+  price: number
+  discount?: number
+  sizes?: Array<{ size: string; stock: number }>
+}
+
+/**
+ * Raw action — no assertions inside; the Homepage suite's seeding helper
+ * below is what asserts/throws. Requires auth (any valid token — the
+ * endpoint doesn't care which account). multipart/form-data since
+ * CreateProduct requires exactly MAX_PRODUCT_IMAGES image files per product;
+ * the same placeholder image (SEED_IMAGE_PATH) is reused for all of them —
+ * only the product's own fields matter for what these tests assert.
+ */
+export function createProduct(
+  request: APIRequestContext,
+  token: string,
+  payload: CreateProductPayload
+): Promise<APIResponse> {
+  const form = new FormData()
+  form.set('brand', payload.brand)
+  form.set('name', payload.name)
+  form.set('description', payload.description ?? '')
+  form.set('gender', payload.gender)
+  form.set('category', payload.category)
+  form.set('subcategory', payload.subcategory ?? '')
+  form.set('price', String(payload.price))
+  form.set('discount', String(payload.discount ?? 0))
+  if (payload.sizes) {
+    form.set('sizes', JSON.stringify(payload.sizes))
+  }
+
+  const imageBytes = fs.readFileSync(SEED_IMAGE_PATH)
+  for (let i = 0; i < MAX_PRODUCT_IMAGES; i++) {
+    form.append('images', new Blob([imageBytes], { type: 'image/png' }), `seed-product-${i}.png`)
+  }
+
+  return request.post(`${API_BASE_URL}/api/products`, {
+    headers: authHeaders(token),
+    multipart: form,
+  })
+}
+
+/**
+ * Raw action — no assertions inside. Requires auth. Logs a sale event for an
+ * existing product, feeding the "best_selling" sort.
+ */
+export function recordSale(
+  request: APIRequestContext,
+  token: string,
+  productId: string,
+  quantity: number
+): Promise<APIResponse> {
+  return request.post(`${API_BASE_URL}/api/products/${productId}/sales`, {
+    headers: authHeaders(token),
+    data: { quantity },
+  })
+}
+
+/**
+ * Precondition helper — creates a product through the public CreateProduct
+ * endpoint (rather than a direct DB insert) so the Homepage suite's
+ * assertions can target known, freshly-created data instead of assuming the
+ * environment's catalog already contains a matching product. Fails fast if
+ * seeding itself fails.
+ */
+export async function seedProduct(
+  request: APIRequestContext,
+  token: string,
+  payload: CreateProductPayload
+): Promise<Product> {
+  const res = await createProduct(request, token, payload)
+  if (res.status() !== 201) {
+    throw new Error(`Seeding a product failed: expected 201, got ${res.status()} — ${await res.text()}`)
+  }
+  return res.json()
+}
+
+/**
+ * Precondition helper — records a sale for an already-seeded product. Fails
+ * fast if seeding itself fails.
+ */
+export async function seedSale(
+  request: APIRequestContext,
+  token: string,
+  productId: string,
+  quantity: number
+): Promise<Sale> {
+  const res = await recordSale(request, token, productId, quantity)
+  if (res.status() !== 201) {
+    throw new Error(`Seeding a sale failed: expected 201, got ${res.status()} — ${await res.text()}`)
+  }
+  return res.json()
 }
