@@ -1,0 +1,9 @@
+# Three-Agent QA Architecture: Product Manager → QA Tester → Automation Engineer
+
+Test-case work on this project is split across three separate subagents (`.claude/agents/product-manager.md`, `.claude/agents/qa-tester.md`, `.claude/agents/automation-engineer.md`), invoked via `/pm-spec`, `/generate-testcase`, and `/automate-testcase` respectively. The split exists to prevent a specific failure mode discovered in this project: writing a test case's "expected result" by reading the backend code that produces it, which makes the test circular — it can only prove the code agrees with itself, never catch a real bug in it.
+
+- **`product-manager`** decides what a feature *should* do — from stated requirements, visible frontend UI text, existing docs, and named UX conventions. It **never reads backend implementation code** to decide correctness. Its output is a saved spec (`docs/spec-<feature-slug>.md`) used when no Confluence PRD exists for a feature.
+- **`qa-tester`** writes/maintains the actual Qase test cases, sourcing "expected behavior" only from a Confluence PRD or a `product-manager` spec — never invented from reading the code. It still reads backend/frontend code, but only to *verify* the implementation against that source and report mismatches, not to *decide* what's correct.
+- **`automation-engineer`** converts an already-decided Qase case into a Playwright test. Reading implementation code here is expected and necessary (to get the exact endpoint/status/shape or button/label text right) — correctness was already settled upstream.
+
+Any of the three finding an unresolved question, ambiguity, or a spec/implementation mismatch stops and reports it — none of them silently guesses, silently "fixes" the other layer, or silently treats current behavior as correct without a traceable source.
