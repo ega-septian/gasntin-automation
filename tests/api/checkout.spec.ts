@@ -1,25 +1,27 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/fixtures.js'
 import { registerUser } from '@api/auth.js'
-import { findProductWithStock, getProduct } from '@api/products.js'
+import { getProduct } from '@api/products.js'
 import { checkout, buildCheckoutPayload } from '@api/orders.js'
 import { qaseId } from '@support/qase.js'
+import { buildProductPayload } from '@data/products.js'
 
 test.describe('API > Checkout', () => {
-  test.describe.configure({ mode: 'serial' })
-
   test(
     "POST /orders rejects checkout when a requested item's quantity exceeds its current available stock",
     { ...qaseId(52), tag: ['@regression', '@checkout'] },
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const seeded = await registerUser(request)
-      const item = await findProductWithStock(request, 1)
+      const item = await seedProduct(
+        seeded.token,
+        buildProductPayload({ sizes: [{ size: 'M', stock: 3 }] })
+      )
 
       // Step 1: submit checkout for one more unit than is currently available.
       const res = await checkout(
         request,
         seeded.token,
         buildCheckoutPayload({
-          items: [{ product_id: item.productId, size: item.size, quantity: item.stock + 1 }],
+          items: [{ product_id: item.id, size: 'M', quantity: 4 }],
         })
       )
 
@@ -27,32 +29,33 @@ test.describe('API > Checkout', () => {
       // remaining stock in the response.
       expect(res.status()).toBe(400)
       const body = await res.json()
-      expect(body.error).toBe(
-        `stok tidak cukup untuk ${item.productName} ukuran ${item.size} (tersisa ${item.stock})`
-      )
+      expect(body.error).toBe(`stok tidak cukup untuk ${item.name} ukuran M (tersisa 3)`)
 
       // Step 3: the rejected order must not have decremented stock.
-      const afterRes = await getProduct(request, item.productId)
+      const afterRes = await getProduct(request, item.id)
       expect(afterRes.status()).toBe(200)
       const after = await afterRes.json()
-      const afterSize = after.sizes.find((s: { size: string }) => s.size === item.size)
-      expect(afterSize?.stock).toBe(item.stock)
+      const afterSize = after.sizes.find((s: { size: string }) => s.size === 'M')
+      expect(afterSize?.stock).toBe(3)
     }
   )
 
   test(
     "POST /orders succeeds when a requested item's quantity exactly equals its current available stock",
     { ...qaseId(53), tag: ['@smoke', '@checkout'] },
-    async ({ request }) => {
+    async ({ request, seedProduct }) => {
       const seeded = await registerUser(request)
-      const item = await findProductWithStock(request, 1)
+      const item = await seedProduct(
+        seeded.token,
+        buildProductPayload({ sizes: [{ size: 'M', stock: 3 }] })
+      )
 
       // Step 1: submit checkout for exactly the available stock.
       const res = await checkout(
         request,
         seeded.token,
         buildCheckoutPayload({
-          items: [{ product_id: item.productId, size: item.size, quantity: item.stock }],
+          items: [{ product_id: item.id, size: 'M', quantity: 3 }],
         })
       )
 
@@ -63,18 +66,18 @@ test.describe('API > Checkout', () => {
       expect(body.items).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            product_id: item.productId,
-            size: item.size,
-            quantity: item.stock,
+            product_id: item.id,
+            size: 'M',
+            quantity: 3,
           }),
         ])
       )
 
       // Step 3: the product's stock for that size is now decremented to 0.
-      const afterRes = await getProduct(request, item.productId)
+      const afterRes = await getProduct(request, item.id)
       expect(afterRes.status()).toBe(200)
       const after = await afterRes.json()
-      const afterSize = after.sizes.find((s: { size: string }) => s.size === item.size)
+      const afterSize = after.sizes.find((s: { size: string }) => s.size === 'M')
       expect(afterSize?.stock).toBe(0)
     }
   )
