@@ -352,8 +352,7 @@ test.describe('WEB > Homepage', () => {
       )
       await homePage.open()
       const filtersRes = await filtersResponsePromise
-      const filters: { category: Array<{ value: string; count: number }> } =
-        await filtersRes.json()
+      const filters: { category: Array<{ value: string; count: number }> } = await filtersRes.json()
       const expectedCounts = new Map(filters.category.map((opt) => [opt.value, opt.count]))
       expect(expectedCounts.has('Outerwear')).toBe(true)
 
