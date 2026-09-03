@@ -5,6 +5,8 @@ import { ShopPage } from '../pages/ShopPage.js'
 import { ProductDetailPage } from '../pages/ProductDetailPage.js'
 import { CartPage } from '../pages/CartPage.js'
 import { CheckoutPage } from '../pages/CheckoutPage.js'
+import { OrderHistoryPage } from '../pages/OrderHistoryPage.js'
+import { OrderDetailPage } from '../pages/OrderDetailPage.js'
 import {
   seedProduct as rawSeedProduct,
   deleteProduct,
@@ -19,6 +21,8 @@ interface WebFixtures {
   productDetailPage: ProductDetailPage
   cartPage: CartPage
   checkoutPage: CheckoutPage
+  orderHistoryPage: OrderHistoryPage
+  orderDetailPage: OrderDetailPage
   seedProduct: (token: string, payload: CreateProductPayload) => Promise<Product>
 }
 
@@ -29,10 +33,10 @@ interface WebFixtures {
  * - `loginPage`: every WEB > Login case starts with "Open the Login page"
  *   (see GASNTIN-9 through GASNTIN-16), so navigation happens once here
  *   instead of being repeated in every test.
- * - `homePage`/`shopPage`/`productDetailPage`/`cartPage`/`checkoutPage`:
- *   instantiated without navigating, since different WEB > Homepage cases
- *   start from different pages (see GASNTIN-26 through GASNTIN-33) — each
- *   test calls `.open()` itself.
+ * - `homePage`/`shopPage`/`productDetailPage`/`cartPage`/`checkoutPage`/
+ *   `orderHistoryPage`/`orderDetailPage`: instantiated without navigating,
+ *   since different WEB > Homepage cases start from different pages (see
+ *   GASNTIN-26 through GASNTIN-33) — each test calls `.open()` itself.
  * - `seedProduct`: mirrors the API suite's fixture of the same name — every
  *   product it creates is soft-deleted again once the test finishes.
  */
@@ -61,6 +65,14 @@ export const test = base.extend<WebFixtures>({
 
   checkoutPage: async ({ page }, use) => {
     await use(new CheckoutPage(page))
+  },
+
+  orderHistoryPage: async ({ page }, use) => {
+    await use(new OrderHistoryPage(page))
+  },
+
+  orderDetailPage: async ({ page }, use) => {
+    await use(new OrderDetailPage(page))
   },
 
   seedProduct: async ({ request }, use) => {
