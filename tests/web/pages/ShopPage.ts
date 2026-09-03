@@ -3,8 +3,9 @@ import { Navbar } from './Navbar.js'
 
 /**
  * Page object for the Shop page. Composes the shared Navbar component, plus
- * the search-result summary text, the empty-results message, and the
- * product results grid (GASNTIN-29, GASNTIN-30).
+ * the search-result summary text, the empty-results message, the product
+ * results grid (GASNTIN-29, GASNTIN-30), and the brand/category filter
+ * checkboxes (GASNTIN-36, GASNTIN-39).
  */
 export class ShopPage {
   readonly page: Page
@@ -25,5 +26,17 @@ export class ShopPage {
 
   async open(): Promise<void> {
     await this.page.goto('/shop')
+  }
+
+  brandFilterCheckbox(brand: string): Locator {
+    return this.page.getByTestId(`shop-filter-brand-${brand}`)
+  }
+
+  categoryFilterCheckbox(category: string): Locator {
+    return this.page.getByTestId(`shop-filter-category-${category}`)
+  }
+
+  async productNames(): Promise<string[]> {
+    return this.productCards.locator('[data-testid="product-name"]').allTextContents()
   }
 }

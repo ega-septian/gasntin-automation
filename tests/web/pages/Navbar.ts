@@ -3,8 +3,8 @@ import type { Locator, Page } from '@playwright/test'
 /**
  * Component object for the navbar, present on every page. Reused across
  * every WEB > Homepage case that interacts with the logo, nav links, search
- * box, cart icon, or the guest/logged-in session controls (GASNTIN-26
- * through GASNTIN-33).
+ * box, cart icon, guest/logged-in session controls (GASNTIN-26 through
+ * GASNTIN-33), or the mobile hamburger menu (GASNTIN-40).
  */
 export class Navbar {
   readonly root: Locator
@@ -19,6 +19,13 @@ export class Navbar {
   readonly ctaButton: Locator
   readonly accountButton: Locator
   readonly logoutButton: Locator
+  readonly mobileMenuToggle: Locator
+  readonly mobileMenu: Locator
+  readonly mobileSearchInput: Locator
+  readonly mobileShopLink: Locator
+  readonly mobileSaleLink: Locator
+  readonly mobileNewArrivalsLink: Locator
+  readonly mobileBrandsLink: Locator
 
   constructor(page: Page) {
     this.root = page.getByTestId('navbar')
@@ -33,6 +40,13 @@ export class Navbar {
     this.ctaButton = this.root.getByTestId('navbar-cta')
     this.accountButton = this.root.getByTestId('navbar-account-button')
     this.logoutButton = this.root.getByTestId('navbar-logout-button')
+    this.mobileMenuToggle = this.root.getByTestId('navbar-mobile-menu-toggle')
+    this.mobileMenu = this.root.getByTestId('navbar-mobile-menu')
+    this.mobileSearchInput = this.root.getByTestId('navbar-mobile-search-input')
+    this.mobileShopLink = this.root.getByTestId('navbar-mobile-link-shop')
+    this.mobileSaleLink = this.root.getByTestId('navbar-mobile-link-sale')
+    this.mobileNewArrivalsLink = this.root.getByTestId('navbar-mobile-link-new-arrivals')
+    this.mobileBrandsLink = this.root.getByTestId('navbar-mobile-link-brands')
   }
 
   async clickLogo(): Promise<void> {
@@ -70,5 +84,14 @@ export class Navbar {
 
   async clickLogout(): Promise<void> {
     await this.logoutButton.click()
+  }
+
+  async openMobileMenu(): Promise<void> {
+    await this.mobileMenuToggle.click()
+  }
+
+  async searchMobile(term: string): Promise<void> {
+    await this.mobileSearchInput.fill(term)
+    await this.mobileSearchInput.press('Enter')
   }
 }
