@@ -3,8 +3,9 @@ import { Navbar } from './Navbar.js'
 
 /**
  * Page object for the Product Detail page. Composes the shared Navbar
- * component, plus the "Add to Cart" button (GASNTIN-31) and the product's
- * brand/name headings (GASNTIN-37).
+ * component, plus the "Add to Cart" button (GASNTIN-31), the product's
+ * brand/name headings (GASNTIN-37), and the size selector and quantity
+ * stepper (GASNTIN-44, GASNTIN-45, GASNTIN-47).
  */
 export class ProductDetailPage {
   readonly page: Page
@@ -13,6 +14,8 @@ export class ProductDetailPage {
   readonly addToCartButton: Locator
   readonly brand: Locator
   readonly name: Locator
+  readonly quantityIncrementButton: Locator
+  readonly quantityValue: Locator
 
   constructor(page: Page) {
     this.page = page
@@ -21,10 +24,20 @@ export class ProductDetailPage {
     this.addToCartButton = page.getByTestId('product-detail-add-to-cart')
     this.brand = page.getByTestId('product-detail-brand')
     this.name = page.getByTestId('product-detail-name')
+    this.quantityIncrementButton = page.getByTestId('product-detail-quantity-increment')
+    this.quantityValue = page.getByTestId('product-detail-quantity-value')
   }
 
   async open(productId: string): Promise<void> {
     await this.page.goto(`/products/${productId}`)
+  }
+
+  sizeButton(size: string): Locator {
+    return this.page.getByTestId(`product-detail-size-${size}`)
+  }
+
+  async selectSize(size: string): Promise<void> {
+    await this.sizeButton(size).click()
   }
 
   async addToCart(): Promise<void> {
