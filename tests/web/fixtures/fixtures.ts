@@ -4,6 +4,7 @@ import { HomePage } from '../pages/HomePage.js'
 import { ShopPage } from '../pages/ShopPage.js'
 import { ProductDetailPage } from '../pages/ProductDetailPage.js'
 import { CartPage } from '../pages/CartPage.js'
+import { CheckoutPage } from '../pages/CheckoutPage.js'
 import {
   seedProduct as rawSeedProduct,
   deleteProduct,
@@ -17,6 +18,7 @@ interface WebFixtures {
   shopPage: ShopPage
   productDetailPage: ProductDetailPage
   cartPage: CartPage
+  checkoutPage: CheckoutPage
   seedProduct: (token: string, payload: CreateProductPayload) => Promise<Product>
 }
 
@@ -27,10 +29,10 @@ interface WebFixtures {
  * - `loginPage`: every WEB > Login case starts with "Open the Login page"
  *   (see GASNTIN-9 through GASNTIN-16), so navigation happens once here
  *   instead of being repeated in every test.
- * - `homePage`/`shopPage`/`productDetailPage`/`cartPage`: instantiated without
- *   navigating, since different WEB > Homepage cases start from different
- *   pages (see GASNTIN-26 through GASNTIN-33) — each test calls `.open()`
- *   itself.
+ * - `homePage`/`shopPage`/`productDetailPage`/`cartPage`/`checkoutPage`:
+ *   instantiated without navigating, since different WEB > Homepage cases
+ *   start from different pages (see GASNTIN-26 through GASNTIN-33) — each
+ *   test calls `.open()` itself.
  * - `seedProduct`: mirrors the API suite's fixture of the same name — every
  *   product it creates is soft-deleted again once the test finishes.
  */
@@ -55,6 +57,10 @@ export const test = base.extend<WebFixtures>({
 
   cartPage: async ({ page }, use) => {
     await use(new CartPage(page))
+  },
+
+  checkoutPage: async ({ page }, use) => {
+    await use(new CheckoutPage(page))
   },
 
   seedProduct: async ({ request }, use) => {
