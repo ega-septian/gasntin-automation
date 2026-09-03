@@ -45,3 +45,46 @@ export function buildCheckoutPayload(overrides: Partial<CheckoutPayload> = {}): 
     ...overrides,
   }
 }
+
+export interface OrderItem {
+  id: string
+  product_id: string | null
+  product_name: string
+  brand: string
+  size: string
+  unit_price: number
+  quantity: number
+  created_at: string
+}
+
+export interface Order {
+  id: string
+  user_id: string
+  recipient_name: string
+  phone: string
+  address: string
+  total_amount: number
+  status: string
+  created_at: string
+  items: OrderItem[]
+}
+
+/**
+ * Precondition helper — places an order through the public Checkout endpoint,
+ * which consumes real stock server-side. Used by the Cart suite to change a
+ * product/size's real stock as a background action, without going through
+ * the browser's own cart. Fails fast if placing the order itself fails.
+ */
+export async function placeOrder(
+  request: APIRequestContext,
+  token: string,
+  payload: CheckoutPayload
+): Promise<Order> {
+  const res = await checkout(request, token, payload)
+  if (res.status() !== 201) {
+    throw new Error(
+      `Placing an order failed: expected 201, got ${res.status()} — ${await res.text()}`
+    )
+  }
+  return res.json()
+}
