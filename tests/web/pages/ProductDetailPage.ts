@@ -4,8 +4,8 @@ import { Navbar } from './Navbar.js'
 /**
  * Page object for the Product Detail page. Composes the shared Navbar
  * component, plus the "Add to Cart" button (GASNTIN-31), the product's
- * brand/name headings (GASNTIN-37), and the size selector and quantity
- * stepper (GASNTIN-44, GASNTIN-45, GASNTIN-47).
+ * brand/name/price (GASNTIN-37, GASNTIN-64), and the size selector and
+ * quantity stepper (GASNTIN-44, GASNTIN-45, GASNTIN-47).
  */
 export class ProductDetailPage {
   readonly page: Page
@@ -14,6 +14,7 @@ export class ProductDetailPage {
   readonly addToCartButton: Locator
   readonly brand: Locator
   readonly name: Locator
+  readonly price: Locator
   readonly quantityIncrementButton: Locator
   readonly quantityValue: Locator
 
@@ -24,6 +25,7 @@ export class ProductDetailPage {
     this.addToCartButton = page.getByTestId('product-detail-add-to-cart')
     this.brand = page.getByTestId('product-detail-brand')
     this.name = page.getByTestId('product-detail-name')
+    this.price = page.getByTestId('product-detail-price')
     this.quantityIncrementButton = page.getByTestId('product-detail-quantity-increment')
     this.quantityValue = page.getByTestId('product-detail-quantity-value')
   }

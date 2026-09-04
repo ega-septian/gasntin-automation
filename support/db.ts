@@ -32,3 +32,24 @@ export async function findUserByEmail(email: string): Promise<UserRow | null> {
 
 /** bcrypt hashes always carry a $2a$/$2b$/$2y$ prefix. */
 export const BCRYPT_PREFIX = /^\$2[aby]\$/
+
+/**
+ * Updates a product's live price directly in the database. Used only by the
+ * Order Detail suite's price-immutability case (GASNTIN-64), which needs to
+ * change a product's catalog price after an order referencing it has already
+ * been placed — there is no admin/API endpoint for updating a product's
+ * price (see backend/cmd/api/main.go's route table), so this is arranged
+ * directly against the same database the backend uses, matching that case's
+ * own stated precondition.
+ */
+export async function updateProductPrice(productId: string, price: number): Promise<void> {
+  const { default: pg } = await import('pg')
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL })
+
+  await client.connect()
+  try {
+    await client.query('UPDATE products SET price = $1 WHERE id = $2', [price, productId])
+  } finally {
+    await client.end()
+  }
+}
