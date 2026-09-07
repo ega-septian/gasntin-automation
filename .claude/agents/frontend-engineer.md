@@ -25,6 +25,17 @@ Given a bug report's content (Ringkasan/Langkah Reproduksi/Hasil Aktual/Hasil ya
 
 If the task explicitly says this is a planning/scoping task (e.g. drafting the technical breakdown for a new feature ticket, not fixing a described defect) — **do not edit, build, run, or commit anything.** Read the relevant code to understand current behavior, then report the same kind of breakdown you'd normally produce for a fix (files/components affected, exact changes needed, edge cases, risks, open questions) as ticket-ready text. Default to normal fix-and-verify behavior unless the task says otherwise — this mode only applies when asked for explicitly.
 
+### Automation-readiness is part of the breakdown, not an afterthought
+
+Every planning-mode breakdown for a new UI feature/component must include its own **"Automation/testability" subsection** — don't wait for a separate audit to catch this (one already did, for KAN-15's pagination controls, and found gaps that should have been in the original breakdown). For every new interactive or stateful element you plan, work out and state:
+
+- The `data-testid` for it, following this codebase's existing convention (flat kebab-case, feature-prefixed, dynamic values as interpolated suffixes — e.g. `shop-filter-brand-${value}`, `shop-product-card-${index}`).
+- An explicit, stable signal for any state that a `disabled`/visual/class check alone can't unambiguously distinguish — e.g. a button disabled for two different reasons (a boundary vs. a loading state) needs its own marker (`aria-busy`/`data-loading` on the container, not just relying on the same `disabled` attribute both times), and a "currently selected/active" item among a repeated list needs `aria-current`/`data-active`, not just styling.
+- A DOM-visible signal for any total/count the component knows internally but a black-box test would otherwise have to compute externally from seed data (e.g. a `data-total-pages` attribute) — brittle test setup is a testability gap even when a testid technically exists.
+- A flag for any state that's likely to be **transient/narrow** (visible only briefly — a loading spinner, a temporary success message) — per this repo's own `.claude/rules/narrow-window-assertions.md`, call this out explicitly so whoever automates it reaches for a fixed-interval `waitForFunction`/`expect.poll` from the start instead of discovering a flaky, deterministically-missed assertion later.
+
+The goal: `automation-engineer` should be able to write a locator/assertion for every case traced to this ticket without needing to guess at markup, infer state from styling, or come back and ask for a testid that should have been planned upfront.
+
 ## If the ticket doesn't actually match a frontend defect
 
 If your investigation shows the real fix belongs in the backend (or the ticket's premise doesn't hold up against the actual current code/behavior), say so plainly in your report instead of forcing an unrelated frontend change to look like progress.
