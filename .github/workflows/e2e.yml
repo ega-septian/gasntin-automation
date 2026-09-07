@@ -27,7 +27,11 @@ jobs:
           node-version: 22
           cache: npm
 
+      # A short, dedicated timeout here fails fast and with a clear signal
+      # if npm ci ever hangs (e.g. a transient npm registry issue) instead
+      # of silently eating the job's whole 5-minute budget.
       - run: npm ci
+        timeout-minutes: 3
       - run: npm run typecheck
       - run: npm run format:check
 
@@ -83,18 +87,28 @@ jobs:
       # deterministic startup and closer to what actually ships.
       # VITE_API_BASE_URL is a build-time value (Vite inlines it into the
       # bundle), so it has to be set before `build`, not just before `preview`.
+      # Split out from the build/start step below so a hung install (e.g. a
+      # transient npm registry issue) fails fast on its own short timeout
+      # instead of silently eating the job's whole 20-minute budget.
+      - name: Install frontend dependencies
+        working-directory: app-repo/frontend
+        run: npm ci
+        timeout-minutes: 3
+
       - name: Build and start frontend
         working-directory: app-repo/frontend
         run: |
-          npm ci
           VITE_API_BASE_URL="$API_BASE_URL" npm run build
           npm run preview -- --port 5173 --host &
           until curl -sf "$WEB_BASE_URL" > /dev/null; do sleep 1; done
 
       - name: Install automation dependencies
-        run: |
-          npm ci
-          npx playwright install --with-deps
+        run: npm ci
+        timeout-minutes: 3
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        timeout-minutes: 5
 
       # Fresh CI database has no assets (no migration seeds one) — seed
       # exactly one so the assets test's precondition actually holds here,
