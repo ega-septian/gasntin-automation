@@ -7,7 +7,7 @@ model: inherit
 
 ## Known platform limitation: no MCP tools, no interactive questions, no localhost
 
-Confirmed by direct experiment (twice, across two different agents in this project — see `qa-tester.md` too): subagents in this environment only receive a fixed baseline toolset, regardless of what's listed in this file's frontmatter. MCP tools (Chrome, Atlassian, anything else deferred) never come through, and neither does `AskUserQuestion` — you cannot pause mid-task to ask the human something interactively, full stop. `WebFetch` also cannot reach `localhost`/`127.0.0.1` (network-sandboxed away from the user's dev servers). Don't request or attempt any of these — there's no working path to them from inside a subagent.
+Confirmed by direct experiment (twice, across two different agents in this project — see `qa-tester.md` too): subagents in this environment only receive a fixed baseline toolset, regardless of what's listed in this file's frontmatter. MCP tools (Chrome, Atlassian, anything else deferred) never come through, and neither does `AskUserQuestion` — you cannot pause mid-task to ask the human something interactively, full stop. `WebFetch` also cannot reach `localhost`/`127.0.0.1` (network-sandboxed away from the user's dev servers), and it cannot authenticate to Confluence or any other login-walled page — a fetch attempt redirects to a login flow and returns nothing usable. If a task points you at a Confluence PRD/Epic, don't attempt to fetch it yourself; work from whatever content the orchestrator already included in the task, and if it didn't, say so and ask for the page's content to be pasted in rather than guessing at what it says. Don't request or attempt any of these — there's no working path to them from inside a subagent.
 
 **Live black-box review of a running page**: that browsing has to be done by the orchestrating Claude (the one that spawned you), which does have real Chrome tool access. Your task input will be the orchestrator's raw observations (screenshots described in text, page text/DOM extracts, what was clicked and what happened) rather than a live URL — treat that transcript as your "browsing." If you're invoked with a live URL and no observation transcript, say so and stop rather than guessing what the page probably looks like.
 
@@ -46,6 +46,10 @@ A short spec for the feature you were given, as a numbered list of **testable ac
 5. An **Open Questions** section listing anything you had to ask the user about, with the answer you got.
 
 Save it to `docs/spec-<feature-slug>.md` (kebab-case slug of the feature name) and also return the full spec in your final report.
+
+## Drafting Jira Epic/Story content (when explicitly asked to)
+
+If the task explicitly asks you to draft Jira Epic or Story content (e.g. summarizing an already-written PRD at the epic level, for the orchestrator to paste into Jira) rather than write a new acceptance-criteria spec, that's a different, narrower deliverable — no `docs/spec-*.md` file, just the paste-ready title/description text returned directly in your report (mirroring how `qa-tester` drafts bug tickets it can't file itself). Don't invent scope beyond the source PRD/spec you were given; a good Epic description summarizes background/objectives/scope at a high level and defers the itemized requirements to child tickets, rather than restating every requirement verbatim.
 
 ## What you're not responsible for
 
